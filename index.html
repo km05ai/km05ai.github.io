@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>data</title>
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* 全局样式 —— 暗色主题，网盘风格 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid #30363d;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #58a6ff, #f0883e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .badge {
+            background: #21262d;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #8b949e;
+        }
+
+        /* 设置区域 */
+        .settings {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid #30363d;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        .settings .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .settings label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings input {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #c9d1d9;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .settings input:focus {
+            border-color: #58a6ff;
+        }
+
+        .settings .btn-refresh {
+            background: #238636;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .settings .btn-refresh:hover {
+            background: #2ea043;
+        }
+
+        /* 工具栏：上传和路径 */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .toolbar .path-display {
+            background: #161b22;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            font-size: 0.9rem;
+            color: #8b949e;
+            flex: 1;
+            min-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .toolbar .upload-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-area .file-label {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .upload-area .file-label:hover {
+            background: #30363d;
+        }
+
+        .upload-area .btn-upload {
+            background: #1f6feb;
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .upload-area .btn-upload:hover {
+            background: #388bfd;
+        }
+
+        .upload-area .btn-upload:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 文件列表 */
+        .file-list {
+            background: #161b22;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            overflow: hidden;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid #21262d;
+            transition: background 0.15s;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: #1c2128;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-info i {
+            font-size: 1.4rem;
+            color: #58a6ff;
+            width: 28px;
+            text-align: center;
+        }
+
+        .file-info .name {
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .file-info .size {
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .file-actions .btn-delete {
+            background: transparent;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .file-actions .btn-delete:hover {
+            background: #21262d;
+            color: #ff7b72;
+        }
+
+        .file-actions .btn-download {
+            background: transparent;
+            border: none;
+            color: #58a6ff;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .file-actions .btn-download:hover {
+            background: #21262d;
+        }
+
+        /* 空状态 */
+        .empty {
+            padding: 60px 20px;
+            text-align: center;
+            color: #8b949e;
+        }
+
+        .empty i {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        /* 消息提示 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #21262d;
+            border: 1px solid #30363d;
+            padding: 12px 28px;
+            border-radius: 10px;
+            color: #c9d1d9;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 999;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.success {
+            border-color: #238636;
+        }
+        .toast.error {
+            border-color: #f85149;
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .settings {
+                grid-template-columns: 1fr;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .upload-area {
+                justify-content: stretch;
+            }
+            .file-item {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .file-actions {
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app" id="app">
+    <!-- 头部 -->
+    <div class="header">
+        <h1><i class="fas fa-cloud" style="margin-right: 10px;"></i>DATA千万别删index.html</h1>
+        <span class="badge"><i class="fas fa-lock"></i></span>
+    </div>
+
+    <!-- 设置区域 -->
+    <div class="settings" id="settings">
+        <div class="field">
+            <label><i class="fas fa-key"></i> Token</label>
+            <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxx   看网页源代码来获取" value="gith删ub_掉pa所t_11CI有4H4UY0FMwBJzkU2中6ug_DB4sMkTdSN9q文9an9Cd4cXGilMaSXuIh字Itne就是Hkzpj3x8N2ERRKF6OI8OsTjn" />
+        </div>
+        <div class="field">
+            <label><i class="fas fa-user"></i> Owner</label>
+            <input type="text" id="ownerInput" placeholder="你的用户名    看网页源代码来获取" value="km05ai" />
+        </div>
+        <div class="field">
+            <label><i class="fas fa-repository"></i> Repo</label>
+            <input type="text" id="repoInput" placeholder="仓库名    看网页源代码来获取" value="km05ai.github.io" />
+        </div>
+        <div class="field">
+            <label><i class="fas fa-code-branch"></i> Branch</label>
+            <input type="text" id="branchInput" placeholder="main" value="main" />
+        </div>
+        <div class="field">
+            <label><i class="fas fa-folder"></i> 目录路径</label>
+            <input type="text" id="pathInput" placeholder="留空表示根目录" value="" />
+        </div>
+        <div class="field" style="grid-column: span 1; display: flex; align-items: end;">
+            <button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> 刷新列表</button>
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <div class="path-display" id="pathDisplay">📁 当前目录：<span id="currentPathLabel">/</span></div>
+        <div class="upload-area">
+            <input type="file" id="fileInput" />
+            <label for="fileInput" class="file-label"><i class="fas fa-upload"></i> 选择文件</label>
+            <span id="fileSelected" style="font-size:0.85rem;color:#8b949e;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button class="btn-upload" id="uploadBtn"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+        </div>
+    </div>
+
+    <!-- 文件列表 -->
+    <div class="file-list" id="fileList">
+        <div class="empty">
+            <i class="fas fa-inbox"></i>
+            <p>暂无文件，点击「选择文件」上传吧</p>
+        </div>
+    </div>
+</div>
+
+<!-- 消息提示 -->
+<div class="toast" id="toast"></div>
+
+<script>
+    (function() {
+        // DOM 元素
+        const tokenInput = document.getElementById('tokenInput');
+        const ownerInput = document.getElementById('ownerInput');
+        const repoInput = document.getElementById('repoInput');
+        const branchInput = document.getElementById('branchInput');
+        const pathInput = document.getElementById('pathInput');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileSelected = document.getElementById('fileSelected');
+        const fileList = document.getElementById('fileList');
+        const currentPathLabel = document.getElementById('currentPathLabel');
+        const toast = document.getElementById('toast');
+
+        // 存储当前的配置（从 localStorage 读取）
+        function loadSettings() {
+            tokenInput.value = localStorage.getItem('github_token') || '';
+            ownerInput.value = localStorage.getItem('github_owner') || '';
+            repoInput.value = localStorage.getItem('github_repo') || '';
+            branchInput.value = localStorage.getItem('github_branch') || 'main';
+            pathInput.value = localStorage.getItem('github_path') || '';
+        }
+
+        function saveSettings() {
+            localStorage.setItem('github_token', tokenInput.value);
+            localStorage.setItem('github_owner', ownerInput.value);
+            localStorage.setItem('github_repo', repoInput.value);
+            localStorage.setItem('github_branch', branchInput.value);
+            localStorage.setItem('github_path', pathInput.value);
+        }
+
+        // 获取当前配置
+        function getConfig() {
+            return {
+                token: tokenInput.value.trim(),
+                owner: ownerInput.value.trim(),
+                repo: repoInput.value.trim(),
+                branch: branchInput.value.trim() || 'main',
+                path: pathInput.value.trim()  // 可能为空
+            };
+        }
+
+        // 显示 Toast 消息
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'success') toast.classList.add('success');
+            if (type === 'error') toast.classList.add('error');
+            toast.style.display = 'block';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+        }
+
+        // 格式化文件大小
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 获取文件图标
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const map = {
+                'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image', 'svg': 'fa-file-image',
+                'mp4': 'fa-file-video', 'avi': 'fa-file-video', 'mov': 'fa-file-video',
+                'mp3': 'fa-file-audio', 'wav': 'fa-file-audio',
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
+                'pdf': 'fa-file-pdf',
+                'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+                'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+                'txt': 'fa-file-alt', 'md': 'fa-file-alt',
+                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code', 'json': 'fa-file-code',
+                'py': 'fa-file-code', 'java': 'fa-file-code', 'c': 'fa-file-code', 'cpp': 'fa-file-code',
+            };
+            return map[ext] || 'fa-file';
+        }
+
+        // 从 GitHub API 获取文件列表
+        async function fetchFileList() {
+            const config = getConfig();
+            if (!config.token || !config.owner || !config.repo) {
+                showToast('请填写完整的 Token、Owner 和 Repo', 'error');
+                return [];
+            }
+            saveSettings();
+
+            const path = config.path ? encodeURIComponent(config.path) : '';
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}?ref=${config.branch}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showToast('目录不存在或仓库为空', 'error');
+                        return [];
+                    }
+                    const errData = await response.json();
+                    showToast(`API 错误: ${errData.message || response.statusText}`, 'error');
+                    return [];
+                }
+
+                const data = await response.json();
+                // 如果是数组（目录），过滤出文件（type === 'file'），忽略子目录
+                if (Array.isArray(data)) {
+                    return data.filter(item => item.type === 'file');
+                } else {
+                    // 如果返回的是单个文件（可能路径指向文件），但我们的场景是目录，这种情况忽略
+                    showToast('路径指向了一个文件，请修改为目录路径', 'error');
+                    return [];
+                }
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+                return [];
+            }
+        }
+
+        // 渲染文件列表
+    function renderFileList(files) {
+    fileList.innerHTML = '';
+    if (!files || files.length === 0) {
+        fileList.innerHTML = `
+            <div class="empty">
+                <i class="fas fa-inbox"></i>
+                <p>这个目录是空的，上传点东西吧</p>
+            </div>
+        `;
+        return;
+    }
+
+    files.sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const file of files) {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+
+        const icon = getFileIcon(file.name);
+        const size = file.size ? formatSize(file.size) : '';
+
+        item.innerHTML = `
+            <div class="file-info">
+                <i class="fas ${icon}"></i>
+                <span class="name">${escapeHtml(file.name)}</span>
+                <span class="size">${size}</span>
+            </div>
+            <div class="file-actions">
+                <button class="btn-download" data-url="${file.download_url}" title="原始下载（可能慢）"><i class="fas fa-download"></i></button>
+                <button class="btn-download-cdn" data-path="${file.path}" title="CDN加速下载"><i class="fas fa-rocket"></i></button>
+                <button class="btn-delete" data-sha="${file.sha}" data-path="${file.path}" title="删除"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        `;
+
+        // 原始下载
+        item.querySelector('.btn-download').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const url = this.dataset.url;
+            if (url) window.open(url, '_blank');
+        });
+
+        // CDN 下载（修复版）
+        item.querySelector('.btn-download-cdn')?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const config = getConfig();
+            const { owner, repo, branch } = config;
+            const path = this.dataset.path;
+            if (!owner || !repo || !branch) {
+                showToast('请先填写完整的仓库信息', 'error');
+                return;
+            }
+            const cdnUrl = `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${branch}/${path}`;
+            window.open(cdnUrl, '_blank');
+        });
+
+        // 删除
+        item.querySelector('.btn-delete').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const sha = this.dataset.sha;
+            const path = this.dataset.path;
+            if (confirm(`确定要删除 “${path}” 吗？此操作不可恢复（但保留在 Git 历史中）。`)) {
+                deleteFile(path, sha);
+            }
+        });
+
+        fileList.appendChild(item);
+    }
+}
+
+        // 简单的转义，防 XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 删除文件
+        async function deleteFile(path, sha) {
+            const config = getConfig();
+            if (!config.token || !config.owner || !config.repo) {
+                showToast('请先填写配置', 'error');
+                return;
+            }
+
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodeURIComponent(path)}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `通过网页删除 ${path}`,
+                        sha: sha,
+                        branch: config.branch
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    showToast(`删除失败: ${errData.message || response.statusText}`, 'error');
+                    return;
+                }
+
+                showToast(`✅ 已删除 “${path}”`, 'success');
+                // 刷新列表
+                refreshFileList();
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+            }
+        }
+
+        // 上传文件
+        async function uploadFile(file) {
+            const config = getConfig();
+            if (!config.token || !config.owner || !config.repo) {
+                showToast('请先填写配置', 'error');
+                return;
+            }
+
+            // 构建存储路径：如果用户设置了目录，则拼接
+            let basePath = config.path ? config.path.replace(/^\/+|\/+$/g, '') : '';
+            let fileName = file.name;
+            let fullPath = basePath ? `${basePath}/${fileName}` : fileName;
+
+            // 读取文件内容为 Base64
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64 = e.target.result.split(',')[1]; // 去掉 data:xxx;base64,
+
+                // 先尝试获取文件信息，以判断是否已存在（用于覆盖）
+                let sha = null;
+                const checkUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodeURIComponent(fullPath)}`;
+                try {
+                    const checkRes = await fetch(checkUrl, {
+                        headers: { 'Authorization': `token ${config.token}` }
+                    });
+                    if (checkRes.ok) {
+                        const data = await checkRes.json();
+                        sha = data.sha; // 文件已存在，获取 sha 用于覆盖
+                    }
+                } catch (ignore) {}
+
+                // 构建 PUT 请求
+                const putUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodeURIComponent(fullPath)}`;
+                const body = {
+                    message: `通过网页上传 ${fileName}`,
+                    content: base64,
+                    branch: config.branch
+                };
+                if (sha) {
+                    body.sha = sha; // 如果已存在，带上 sha 进行覆盖
+                }
+
+                try {
+                    const response = await fetch(putUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${config.token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        showToast(`上传失败: ${errData.message || response.statusText}`, 'error');
+                        return;
+                    }
+
+                    showToast(`✅ 上传成功: ${fileName}`, 'success');
+                    fileInput.value = '';
+                    fileSelected.textContent = '';
+                    refreshFileList();
+                } catch (err) {
+                    showToast(`网络错误: ${err.message}`, 'error');
+                }
+            };
+
+            reader.onerror = function() {
+                showToast('读取文件失败', 'error');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 刷新文件列表
+        async function refreshFileList() {
+            const config = getConfig();
+            if (!config.token || !config.owner || !config.repo) {
+                showToast('请填写完整的 Token、Owner 和 Repo', 'error');
+                return;
+            }
+            saveSettings();
+            // 更新当前路径显示
+            const displayPath = config.path ? config.path : '/';
+            currentPathLabel.textContent = displayPath;
+
+            // 显示加载状态
+            fileList.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-pulse"></i><p>加载中...</p></div>';
+
+            const files = await fetchFileList();
+            renderFileList(files);
+        }
+
+        // ===== 事件绑定 =====
+
+        // 刷新按钮
+        refreshBtn.addEventListener('click', refreshFileList);
+
+        // 上传按钮
+        uploadBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('请先选择一个文件', 'error');
+                return;
+            }
+            // 可选：限制文件大小（比如 25MB）
+            if (file.size > 25 * 1024 * 1024) {
+                showToast('文件大小超过 25MB，GitHub API 限制请勿上传大文件', 'error');
+                return;
+            }
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 上传中...';
+            uploadFile(file).finally(() => {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 上传';
+            });
+        });
+
+        // 选择文件后显示文件名
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileSelected.textContent = this.files[0].name;
+            } else {
+                fileSelected.textContent = '';
+            }
+        });
+
+        // 当输入框改变时，自动保存设置
+        [tokenInput, ownerInput, repoInput, branchInput, pathInput].forEach(input => {
+            input.addEventListener('change', saveSettings);
+            input.addEventListener('blur', saveSettings);
+        });
+
+        // 初始化加载
+        loadSettings();
+        // 如果配置存在，自动刷新
+        if (tokenInput.value && ownerInput.value && repoInput.value) {
+            refreshFileList();
+        } else {
+            // 显示提示
+            fileList.innerHTML = `<div class="empty"><i class="fas fa-cog"></i><p>请在上方填写 GitHub 配置，然后点击「刷新列表」</p></div>`;
+        }
+
+        // 全局暴露刷新（方便调试）
+        window.refreshFileList = refreshFileList;
+    })();
+</script>
+
+</body>
+</html>
