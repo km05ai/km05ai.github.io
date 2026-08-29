@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>个人网站 | 张三</title>
+    <!-- 字体图标 (Font Awesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5a4bd1;
+            --secondary: #00cec9;
+            --bg: #0f0e17;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text: #fffffe;
+            --text-muted: #a7a9be;
+            --radius: 20px;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== 滚动条 ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        /* ===== 背景粒子 (Canvas) ===== */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== 导航栏 ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 18px 0;
+            background: rgba(15, 14, 23, 0.7);
+            backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: var(--transition);
+        }
+
+        .navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 28px;
+            height: 2.5px;
+            background: #fff;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        /* ===== 公共标题 ===== */
+        .section-title {
+            font-size: 2.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -6px;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 48px;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .hero-content h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 32px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(108, 92, 231, 0.5);
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+            color: #fff;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--primary);
+            box-shadow: none;
+            transform: translateY(-3px);
+        }
+
+        .hero-avatar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .avatar-wrapper {
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 6px;
+            box-shadow: 0 20px 80px rgba(108, 92, 231, 0.25);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--bg);
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-16px);
+            }
+        }
+
+        /* ===== 通用卡片 ===== */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(108, 92, 231, 0.2);
+            box-shadow: var(--shadow);
+        }
+
+        /* ===== About ===== */
+        .about {
+            position: relative;
+            z-index: 1;
+            padding: 100px 0;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-text p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-bottom: 16px;
+        }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 32px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px 12px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .stat-item .number {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-item .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ===== Skills ===== */
+        .skills {
+            position: relative;
+            z-index: 1;
+            padding: 100px 0;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .skill-card {
+            text-align: center;
+            padding: 28px 16px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .skill-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px rgba(108, 92, 231, 0.15);
+        }
+
+        .skill-card i {
+            font-size: 2.8rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .skill-card span {
+            display: block;
+            font-weight: 500;
+        }
+
+        /* ===== Projects ===== */
+        .projects {
+            position: relative;
+            z-index: 1;
+            padding: 100px 0;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .project-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: var(--transition);
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(108, 92, 231, 0.3);
+            box-shadow: var(--shadow);
+        }
+
+        .project-card .thumb {
+            height: 200px;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(0, 206, 201, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--primary);
+        }
+
+        .project-card .body {
+            padding: 24px 26px 30px;
+        }
+
+        .project-card .body h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .project-card .body p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .project-tags span {
+            background: rgba(108, 92, 231, 0.15);
+            padding: 4px 14px;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--secondary);
+        }
+
+        /* ===== Contact ===== */
+        .contact {
+            position: relative;
+            z-index: 1;
+            padding: 100px 0;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .contact-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 60px;
+            margin-top: 20px;
+        }
+
+        .contact-info h3 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+        }
+
+        .contact-info p {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .contact-item i {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border-radius: 50%;
+            color: var(--primary);
+            font-size: 1.1rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .contact-item .info {
+            font-weight: 500;
+        }
+        .contact-item .info small {
+            display: block;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+            margin-top: 28px;
+        }
+
+        .social-links a {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: var(--transition);
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--bg-card);
+            color: #fff;
+            font-size: 1rem;
+            transition: var(--transition);
+            outline: none;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15);
+        }
+
+        .contact-form textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .contact-form .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            position: relative;
+            z-index: 1;
+            padding: 40px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer span {
+            color: var(--primary);
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-content p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .hero-buttons {
+                justify-content: center;
+            }
+            .avatar-wrapper {
+                width: 280px;
+                height: 280px;
+            }
+            .about-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .about-stats {
+                justify-items: center;
+            }
+            .contact-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .section-title::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 260px;
+                height: 100vh;
+                background: rgba(15, 14, 23, 0.96);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 28px;
+                transition: var(--transition);
+                border-left: 1px solid rgba(255, 255, 255, 0.04);
+            }
+
+            .nav-links.active {
+                right: 0;
+            }
+
+            .hamburger {
+                display: flex;
+                z-index: 1001;
+            }
+
+            .hamburger.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+            .hamburger.active span:nth-child(2) {
+                opacity: 0;
+            }
+            .hamburger.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+
+            .hero-content h1 {
+                font-size: 2.6rem;
+            }
+            .avatar-wrapper {
+                width: 220px;
+                height: 220px;
+            }
+            .section-title {
+                font-size: 2rem;
+            }
+            .about-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .skills-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            .btn {
+                padding: 12px 24px;
+                font-size: 0.85rem;
+            }
+            .avatar-wrapper {
+                width: 180px;
+                height: 180px;
+            }
+            .about-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 粒子背景 ===== -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- ===== 导航栏 ===== -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="logo">张三.</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#skills">技能</a></li>
+                <li><a href="#projects">作品</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="菜单">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== Hero ===== -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <h1>你好，我是 <span>张三</span></h1>
+                    <p>一名热爱创造的全栈开发 &amp; 设计爱好者，专注于构建优雅的数字体验。</p>
+                    <div class="hero-buttons">
+                        <a href="#projects" class="btn"><i class="fas fa-rocket"></i> 查看作品</a>
+                        <a href="#contact" class="btn btn-outline"><i class="fas fa-paper-plane"></i> 联系我</a>
+                    </div>
+                </div>
+                <div class="hero-avatar">
+                    <div class="avatar-wrapper">
+                        <!-- 用 SVG 占位头像，也可以替换为真实图片 -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="border-radius:50%;">
+                            <rect width="200" height="200" fill="#1a1a2e" rx="100" />
+                            <circle cx="100" cy="80" r="42" fill="#6c5ce7" opacity="0.3" />
+                            <circle cx="100" cy="80" r="30" fill="#6c5ce7" opacity="0.5" />
+                            <circle cx="100" cy="80" r="18" fill="#6c5ce7" />
+                            <ellipse cx="100" cy="148" rx="56" ry="28" fill="#6c5ce7" opacity="0.2" />
+                            <ellipse cx="100" cy="148" rx="38" ry="18" fill="#6c5ce7" opacity="0.4" />
+                            <circle cx="82" cy="72" r="5" fill="#fff" opacity="0.8" />
+                            <circle cx="118" cy="72" r="5" fill="#fff" opacity="0.8" />
+                            <path d="M 88 94 Q 100 104 112 94" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.6" />
+                            <rect x="72" y="156" width="56" height="10" rx="5" fill="#6c5ce7" opacity="0.2" />
+                            <rect x="80" y="168" width="40" height="8" rx="4" fill="#6c5ce7" opacity="0.15" />
+                            <text x="100" y="190" font-family="sans-serif" font-size="14" fill="#a7a9be" text-anchor="middle" letter-spacing="1">👨‍💻</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== About ===== -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <h2 class="section-title">关于我</h2>
+                    <p>
+                        我是一名全栈开发者，拥有 5 年以上的 Web 开发经验。热衷于将复杂的问题转化为简洁、优雅的解决方案。
+                    </p>
+                    <p>
+                        我相信好的设计不只是好看，更要好用。从用户界面到后端架构，我关注每一个细节，力求创造有温度的数字化产品。
+                    </p>
+                    <div class="about-stats">
+                        <div class="stat-item">
+                            <div class="number">5+</div>
+                            <div class="label">年经验</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="number">36</div>
+                            <div class="label">完成项目</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="number">24</div>
+                            <div class="label">合作客户</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:center;">
+                    <div class="card" style="max-width:400px; width:100%;">
+                        <h3 style="margin-bottom:12px;"><i class="fas fa-quote-left" style="color:var(--primary);margin-right:8px;"></i> 我的信条</h3>
+                        <p style="color:var(--text-muted);font-style:italic;font-size:1.05rem;">
+                            “代码是写给人看的，只是顺便能让机器运行。”
+                        </p>
+                        <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
+                            <span style="background:rgba(108,92,231,0.12);padding:4px 16px;border-radius:60px;font-size:0.8rem;color:var(--secondary);"># 极简</span>
+                            <span style="background:rgba(108,92,231,0.12);padding:4px 16px;border-radius:60px;font-size:0.8rem;color:var(--secondary);"># 性能</span>
+                            <span style="background:rgba(108,92,231,0.12);padding:4px 16px;border-radius:60px;font-size:0.8rem;color:var(--secondary);"># 用户体验</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Skills ===== -->
+    <section class="skills" id="skills">
+        <div class="container">
+            <h2 class="section-title">技能专长</h2>
+            <p class="section-subtitle">我日常使用的技术与工具</p>
+            <div class="skills-grid">
+                <div class="skill-card"><i class="fab fa-html5"></i><span>HTML5</span></div>
+                <div class="skill-card"><i class="fab fa-css3-alt"></i><span>CSS3</span></div>
+                <div class="skill-card"><i class="fab fa-js"></i><span>JavaScript</span></div>
+                <div class="skill-card"><i class="fab fa-react"></i><span>React</span></div>
+                <div class="skill-card"><i class="fab fa-vuejs"></i><span>Vue</span></div>
+                <div class="skill-card"><i class="fab fa-node-js"></i><span>Node.js</span></div>
+                <div class="skill-card"><i class="fab fa-python"></i><span>Python</span></div>
+                <div class="skill-card"><i class="fas fa-database"></i><span>SQL</span></div>
+                <div class="skill-card"><i class="fab fa-docker"></i><span>Docker</span></div>
+                <div class="skill-card"><i class="fab fa-git-alt"></i><span>Git</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Projects ===== -->
+    <section class="projects" id="projects">
+        <div class="container">
+            <h2 class="section-title">作品集</h2>
+            <p class="section-subtitle">一些我近期参与或独立完成的项目</p>
+            <div class="projects-grid">
+                <!-- 项目 1 -->
+                <div class="project-card">
+                    <div class="thumb"><i class="fas fa-cloud-sun"></i></div>
+                    <div class="body">
+                        <h3>智能天气仪表板</h3>
+                        <p>实时天气数据可视化，支持多城市切换与动态图表，采用 React + D3.js 构建。</p>
+                        <div class="project-tags">
+                            <span>React</span><span>D3</span><span>API</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 项目 2 -->
+                <div class="project-card">
+                    <div class="thumb"><i class="fas fa-store"></i></div>
+                    <div class="body">
+                        <h3>电商平台 UI 设计</h3>
+                        <p>完整的设计系统与组件库，涵盖商品展示、购物车、结账流程，使用 Vue 3 + Tailwind。</p>
+                        <div class="project-tags">
+                            <span>Vue</span><span>Tailwind</span><span>Figma</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 项目 3 -->
+                <div class="project-card">
+                    <div class="thumb"><i class="fas fa-robot"></i></div>
+                    <div class="body">
+                        <h3>AI 内容生成器</h3>
+                        <p>基于 GPT 的智能写作助手，支持多语言和风格定制，后端使用 FastAPI + Redis。</p>
+                        <div class="project-tags">
+                            <span>Python</span><span>FastAPI</span><span>AI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">联系我</h2>
+            <p class="section-subtitle">有想法或合作意向？欢迎随时交流</p>
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <h3>一起聊聊</h3>
+                    <p>无论你是想咨询项目、合作开发，还是单纯想交个朋友，我都乐于倾听。</p>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div class="info">zhangsan@email.com <small>工作日 24h 内回复</small></div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div class="info">中国 · 北京 <small>远程 / 线下</small></div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <div class="info">+86 138 0000 8888 <small>可预约通话</small></div>
+                    </div>
+                    <div class="social-links">
+                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="#" aria-label="掘金"><i class="fab fa-jsfiddle"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <input type="text" placeholder="你的名字" required />
+                    <input type="email" placeholder="邮箱地址" required />
+                    <input type="text" placeholder="主题" />
+                    <textarea placeholder="留言内容…" required></textarea>
+                    <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> 发送消息</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Footer ===== -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 <span>张三</span> · 用 <i class="fas fa-heart" style="color:var(--primary);"></i> 打造</p>
+        </div>
+    </footer>
+
+    <!-- ===== JavaScript ===== -->
+    <script>
+        // ===== 1. 粒子背景 =====
+        (function initParticles() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const COUNT = 60;
+            const MAX_SPEED = 0.6;
+            const CONNECT_DIST = 140;
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * MAX_SPEED * 2;
+                    this.vy = (Math.random() - 0.5) * MAX_SPEED * 2;
+                    this.radius = Math.random() * 2.5 + 1.2;
+                    this.opacity = Math.random() * 0.5 + 0.3;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(108, 92, 231, ${this.opacity})`;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < COUNT; i++) {
+                particles.push(new Particle());
+            }
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECT_DIST) {
+                            const alpha = (1 - dist / CONNECT_DIST) * 0.35;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(108, 92, 231, ${alpha})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => { p.update();
+                    p.draw(); });
+                drawLines();
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // ===== 2. 汉堡菜单 =====
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // 点击导航链接后关闭菜单
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // ===== 3. 表单提交（演示） =====
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('.btn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中…';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> 已发送！';
+                btn.style.background = '#00b894';
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                    this.reset();
+                }, 2000);
+            }, 1500);
+        });
+
+        // ===== 4. 导航栏滚动效果 =====
+        const navbar = document.getElementById('navbar');
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const current = window.pageYOffset;
+            if (current > 80) {
+                navbar.style.background = 'rgba(15, 14, 23, 0.85)';
+                navbar.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+            } else {
+                navbar.style.background = 'rgba(15, 14, 23, 0.7)';
+                navbar.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+            }
+            lastScroll = current;
+        });
+
+        console.log('🚀 个人网站已加载！欢迎 👋');
+    </script>
+
+</body>
+</html>
