@@ -552,6 +552,7 @@
                     </div>
                     <div class="file-actions">
                         <button class="btn-download" data-url="${file.download_url}" title="下载"><i class="fas fa-download"></i></button>
+	        <button class="btn-download" data-url="https://cdn.jsdelivr.net/gh/${config.owner}/${config.repo}@${config.branch}/${file.path}" title="镜像下载">
                         <button class="btn-delete" data-sha="${file.sha}" data-path="${file.path}" title="删除"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 `;
