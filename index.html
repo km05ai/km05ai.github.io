@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: #0d1117; color: #c9d1d9; padding: 20px; min-height: 100vh; display: flex; justify-content: center; }
+        .app { max-width: 1000px; width: 100%; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #30363d; margin-bottom: 24px; }
+        .header h1 { font-size: 1.8rem; font-weight: 600; background: linear-gradient(135deg, #58a6ff, #f0883e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .badge { background: #21262d; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: #8b949e; }
+        .settings { background: #161b22; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #30363d; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+        .settings .field { display: flex; flex-direction: column; gap: 4px; }
+        .settings label { font-size: 0.75rem; font-weight: 500; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+        .settings input { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #c9d1d9; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+        .settings input:focus { border-color: #58a6ff; }
+        .settings .btn-refresh { background: #238636; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
+        .settings .btn-refresh:hover { background: #2ea043; }
+
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .toolbar .breadcrumb { background: #161b22; padding: 8px 16px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.9rem; color: #8b949e; flex: 1; min-width: 200px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .breadcrumb a { color: #58a6ff; text-decoration: none; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; }
+        .breadcrumb a:hover { background: #21262d; }
+        .breadcrumb .sep { color: #484f58; }
+        .breadcrumb .current { color: #c9d1d9; font-weight: 500; padding: 2px 6px; }
+        .toolbar .upload-area { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-area .file-label { background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 8px 16px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
+        .upload-area .file-label:hover { background: #30363d; }
+        .upload-area .btn-upload { background: #1f6feb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .upload-area .btn-upload:hover { background: #388bfd; }
+        .upload-area .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+        .upload-area .btn-new-folder { background: #8957e5; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
+        .upload-area .btn-new-folder:hover { background: #a371f7; }
+
+        .encrypt-panel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; }
+        .encrypt-panel label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; color: #c9d1d9; user-select: none; }
+        .encrypt-panel label input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #8957e5; }
+        .encrypt-panel #encryptPassword { display: none; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px 12px; color: #c9d1d9; font-size: 0.9rem; outline: none; flex: 1; min-width: 180px; }
+        .encrypt-panel #encryptPassword:focus { border-color: #8957e5; }
+        .encrypt-hint { font-size: 0.75rem; color: #8b949e; }
+
+        .file-list { background: #161b22; border-radius: 12px; border: 1px solid #30363d; overflow: hidden; }
+        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #21262d; transition: background 0.15s; }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: #1c2128; }
+        .file-item.folder { cursor: pointer; }
+        .file-item.folder .file-info i { color: #d29922; }
+        .file-item.encrypted .file-info .name::after { content: " 🔒"; opacity: 0.8; }
+        .file-item.encrypted .file-info i { color: #8957e5; }
+        .file-info { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+        .file-info i { font-size: 1.4rem; color: #58a6ff; width: 28px; text-align: center; }
+        .file-info .name { font-weight: 500; word-break: break-all; }
+        .file-info .size { font-size: 0.8rem; color: #8b949e; margin-left: 10px; white-space: nowrap; }
+        .file-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .file-actions button { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 6px 10px; border-radius: 6px; transition: background 0.2s, color 0.2s; }
+        .file-actions .btn-delete { color: #f85149; }
+        .file-actions .btn-delete:hover { background: #21262d; color: #ff7b72; }
+        .file-actions .btn-download { color: #58a6ff; }
+        .file-actions .btn-download:hover { background: #21262d; }
+        .file-actions .btn-rename { color: #a371f7; }
+        .file-actions .btn-rename:hover { background: #21262d; }
+        .file-actions .btn-enter { color: #d29922; }
+        .file-actions .btn-enter:hover { background: #21262d; }
+
+        .empty { padding: 60px 20px; text-align: center; color: #8b949e; }
+        .empty i { font-size: 3rem; margin-bottom: 12px; opacity: 0.3; }
+
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #21262d; border: 1px solid #30363d; padding: 12px 28px; border-radius: 10px; color: #c9d1d9; font-size: 0.95rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); display: none; z-index: 999; max-width: 90%; text-align: center; }
+        .toast.success { border-color: #238636; }
+        .toast.error { border-color: #f85149; }
+
+        .pwd-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .pwd-modal.show { display: flex; }
+        .pwd-modal .pwd-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; width: 90%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+        .pwd-modal h3 { font-size: 1.1rem; margin-bottom: 12px; color: #c9d1d9; display: flex; align-items: center; gap: 8px; }
+        .pwd-modal .pwd-filename { font-size: 0.85rem; color: #8b949e; margin-bottom: 16px; word-break: break-all; }
+        .pwd-modal input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #c9d1d9; font-size: 0.95rem; outline: none; margin-bottom: 16px; }
+        .pwd-modal input:focus { border-color: #58a6ff; }
+        .pwd-modal .pwd-btns { display: flex; gap: 10px; justify-content: flex-end; }
+        .pwd-modal .pwd-btns button { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+        .pwd-modal .btn-cancel { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+        .pwd-modal .btn-confirm { background: #1f6feb; color: #fff; }
+        .pwd-modal .btn-confirm:hover { background: #388bfd; }
+
+        @media (max-width: 600px) {
+            .settings { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .upload-area { justify-content: stretch; }
+            .file-item { flex-wrap: wrap; gap: 8px; }
+            .file-actions { margin-left: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app" id="app">
+    <div class="header">
+        <h1><i class="fas fa-cloud" style="margin-right: 10px;"></i><h1><i class="fas fa-cloud" style="margin-right: 10px;"></i>千万别删index.html</h1></h1>
+        <h1><i class="fas fa-cloud" style="margin-right: 10px;"></i><h1><i class="fas fa-cloud" style="margin-right: 10px;"></i>TOKEN：gith删ub_掉pa所t_11CI有4H4UY0FMwBJzkU2中6ug_DB4sMkTdSN9q文9an9Cd4cXGilMaSXuIh字Itne就是Hkzpj3x8N2ERRKF6OI8OsTjn</h1></h1>
+        <span class="badge"><i class="fas fa-lock"></i></span>
+    </div>
+
+    <div class="settings" id="settings">
+        <div class="field"><label><i class="fas fa-key"></i> Token</label><input type="password" id="tokenInput" placeholder="ghp_xxxxxxxx" value="gith删ub_掉pa所t_11CI有4H4UY0FMwBJzkU2中6ug_DB4sMkTdSN9q文9an9Cd4cXGilMaSXuIh字Itne就是Hkzpj3x8N2ERRKF6OI8OsTjn" /></div>
+        <div class="field"><label><i class="fas fa-user"></i> Owner</label><input type="text" id="ownerInput" placeholder="你的用户名" value="km05ai" /></div>
+        <div class="field"><label><i class="fas fa-repository"></i> Repo</label><input type="text" id="repoInput" placeholder="仓库名" value="km05ai.github.io" /></div>
+        <div class="field"><label><i class="fas fa-code-branch"></i> Branch</label><input type="text" id="branchInput" placeholder="main" value="main" /></div>
+        <div class="field"><label><i class="fas fa-folder"></i> 目录路径</label><input type="text" id="pathInput" placeholder="留空表示根目录" value="" /></div>
+        <div class="field" style="grid-column: span 1; display: flex; align-items: end;"><button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> 刷新列表</button></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="breadcrumb" id="breadcrumb"><a href="#" data-path="">根目录</a></div>
+        <div class="upload-area">
+            <input type="file" id="fileInput" />
+            <label for="fileInput" class="file-label"><i class="fas fa-upload"></i> 选择文件</label>
+            <span id="fileSelected" style="font-size:0.85rem;color:#8b949e;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button class="btn-upload" id="uploadBtn"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+            <button class="btn-new-folder" id="newFolderBtn"><i class="fas fa-folder-plus"></i> 新建文件夹</button>
+        </div>
+    </div>
+
+    <div class="encrypt-panel">
+        <label><input type="checkbox" id="encryptCheckbox" /><i class="fas fa-lock" style="color:#8957e5;"></i> 加密上传（存为 .enc 后缀）</label>
+        <input type="password" id="encryptPassword" placeholder="输入加密密码（至少 6 位）" />
+        <span class="encrypt-hint">AES-GCM，加密头仅 28 字节</span>
+    </div>
+
+    <div class="file-list" id="fileList">
+        <div class="empty"><i class="fas fa-inbox"></i><p>暂无文件，点击「选择文件」上传吧</p></div>
+    </div>
+</div>
+
+<div class="pwd-modal" id="pwdModal">
+    <div class="pwd-box">
+        <h3><i class="fas fa-lock" style="color:#8957e5;"></i> 解密文件</h3>
+        <div class="pwd-filename" id="pwdFilename"></div>
+        <input type="password" id="pwdInput" placeholder="请输入解密密码" autocomplete="off" />
+        <div class="pwd-btns">
+            <button class="btn-cancel" id="pwdCancel">取消</button>
+            <button class="btn-confirm" id="pwdConfirm">解密并下载</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    (function() {
+        // DOM
+        const tokenInput = document.getElementById('tokenInput');
+        const ownerInput = document.getElementById('ownerInput');
+        const repoInput = document.getElementById('repoInput');
+        const branchInput = document.getElementById('branchInput');
+        const pathInput = document.getElementById('pathInput');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const newFolderBtn = document.getElementById('newFolderBtn');
+        const fileSelected = document.getElementById('fileSelected');
+        const fileList = document.getElementById('fileList');
+        const breadcrumb = document.getElementById('breadcrumb');
+        const toast = document.getElementById('toast');
+        const encryptCheckbox = document.getElementById('encryptCheckbox');
+        const encryptPassword = document.getElementById('encryptPassword');
+        const pwdModal = document.getElementById('pwdModal');
+        const pwdFilename = document.getElementById('pwdFilename');
+        const pwdInput = document.getElementById('pwdInput');
+        const pwdCancel = document.getElementById('pwdCancel');
+        const pwdConfirm = document.getElementById('pwdConfirm');
+
+        // ===== 配置 =====
+        function loadSettings() {
+            tokenInput.value = localStorage.getItem('github_token') || '';
+            ownerInput.value = localStorage.getItem('github_owner') || '';
+            repoInput.value = localStorage.getItem('github_repo') || '';
+            branchInput.value = localStorage.getItem('github_branch') || 'main';
+            pathInput.value = localStorage.getItem('github_path') || '';
+        }
+        function saveSettings() {
+            localStorage.setItem('github_token', tokenInput.value);
+            localStorage.setItem('github_owner', ownerInput.value);
+            localStorage.setItem('github_repo', repoInput.value);
+            localStorage.setItem('github_branch', branchInput.value);
+            localStorage.setItem('github_path', pathInput.value);
+        }
+        function getConfig() {
+            return {
+                token: tokenInput.value.trim(),
+                owner: ownerInput.value.trim(),
+                repo: repoInput.value.trim(),
+                branch: branchInput.value.trim() || 'main',
+                path: pathInput.value.trim()
+            };
+        }
+        function requireConfig() {
+            const c = getConfig();
+            if (!c.token || !c.owner || !c.repo) {
+                showToast('请先填写完整的配置', 'error');
+                return null;
+            }
+            return c;
+        }
+
+        // ===== 工具 =====
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'success') toast.classList.add('success');
+            if (type === 'error') toast.classList.add('error');
+            toast.style.display = 'block';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        function getFileIcon(filename) {
+            const name = filename.endsWith('.enc') ? filename.slice(0, -4) : filename;
+            const ext = name.split('.').pop().toLowerCase();
+            const map = {
+                'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image', 'svg': 'fa-file-image',
+                'mp4': 'fa-file-video', 'avi': 'fa-file-video', 'mov': 'fa-file-video',
+                'mp3': 'fa-file-audio', 'wav': 'fa-file-audio',
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
+                'pdf': 'fa-file-pdf',
+                'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+                'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+                'txt': 'fa-file-alt', 'md': 'fa-file-alt',
+                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code', 'json': 'fa-file-code',
+                'py': 'fa-file-code', 'java': 'fa-file-code', 'c': 'fa-file-code', 'cpp': 'fa-file-code',
+            };
+            return map[ext] || 'fa-file';
+        }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        function encodePath(path) {
+            return path.split('/').map(encodeURIComponent).join('/');
+        }
+        // 判断是否为加密文件
+        function isEncName(name) {
+            return name.endsWith('.enc');
+        }
+        // 加密文件名 → 原文件名
+        function encNameToOrig(name) {
+            return name.endsWith('.enc') ? name.slice(0, -4) : name;
+        }
+
+        // ===== 加密核心（新格式：salt 8 + iv 8 + ciphertext 含 12 字节 tag = 28 字节开销）=====
+        const PBKDF2_ITER = 10000;
+        const SALT_LEN = 8;
+        const IV_LEN = 8;
+        const TAG_BITS = 96; // 12 字节 GCM tag
+
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const baseKey = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptData(data, password) {
+            const salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+            const iv = crypto.getRandomValues(new Uint8Array(IV_LEN));
+            const key = await deriveKey(password, salt);
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv, tagLength: TAG_BITS },
+                key,
+                data
+            );
+            const result = new Uint8Array(SALT_LEN + IV_LEN + ciphertext.byteLength);
+            result.set(salt, 0);
+            result.set(iv, SALT_LEN);
+            result.set(new Uint8Array(ciphertext), SALT_LEN + IV_LEN);
+            return result;
+        }
+
+        async function decryptData(buffer, password) {
+            const view = new Uint8Array(buffer);
+            const minLen = SALT_LEN + IV_LEN + TAG_BITS / 8;
+            if (view.length < minLen) throw new Error('文件太小，不是有效加密文件');
+            const salt = view.slice(0, SALT_LEN);
+            const iv = view.slice(SALT_LEN, SALT_LEN + IV_LEN);
+            const ciphertext = view.slice(SALT_LEN + IV_LEN);
+            const key = await deriveKey(password, salt);
+            const plaintext = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv, tagLength: TAG_BITS },
+                key,
+                ciphertext
+            );
+            return new Uint8Array(plaintext);
+        }
+
+        // 完整文件拉取（多源 + 超时）
+        async function fetchFullFileBytes(config, filePath) {
+            const encPath = encodePath(filePath);
+            const sources = [
+                `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${encPath}`,
+                `https://cdn.jsdmirror.com/gh/${config.owner}/${config.repo}@${config.branch}/${encPath}`,
+                `https://gh-proxy.com/https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${encPath}`
+            ];
+            for (const url of sources) {
+                try {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 20000);
+                    const res = await fetch(url, { signal: controller.signal });
+                    clearTimeout(timer);
+                    if (res.ok) return await res.arrayBuffer();
+                } catch (e) { /* 试下一个 */ }
+            }
+            const apiUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encPath}?ref=${config.branch}`;
+            const res2 = await fetch(apiUrl, {
+                headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (!res2.ok) throw new Error('所有源均不可用');
+            const data = await res2.json();
+            if (!data.content) throw new Error('无法读取内容');
+            const bin = atob(data.content.replace(/\s/g, ''));
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            return arr.buffer;
+        }
+
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            const chunkSize = 8192;
+            let result = '';
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                const chunk = bytes.subarray(i, i + chunkSize);
+                result += String.fromCharCode.apply(null, chunk);
+            }
+            return btoa(result);
+        }
+
+        function downloadBlob(bytes, filename) {
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
+
+        // ===== 密码弹窗 =====
+        function askPassword(filename) {
+            return new Promise((resolve) => {
+                pwdFilename.textContent = `文件：${filename}`;
+                pwdInput.value = '';
+                pwdModal.classList.add('show');
+                setTimeout(() => pwdInput.focus(), 100);
+                function onConfirm() { cleanup(); resolve(pwdInput.value || null); }
+                function onCancel() { cleanup(); resolve(null); }
+                function onKey(e) {
+                    if (e.key === 'Enter') onConfirm();
+                    else if (e.key === 'Escape') onCancel();
+                }
+                function cleanup() {
+                    pwdModal.classList.remove('show');
+                    pwdConfirm.removeEventListener('click', onConfirm);
+                    pwdCancel.removeEventListener('click', onCancel);
+                    pwdInput.removeEventListener('keydown', onKey);
+                }
+                pwdConfirm.addEventListener('click', onConfirm);
+                pwdCancel.addEventListener('click', onCancel);
+                pwdInput.addEventListener('keydown', onKey);
+            });
+        }
+
+        // ===== 面包屑 =====
+        function renderBreadcrumb(path) {
+            breadcrumb.innerHTML = '';
+            const rootLink = document.createElement('a');
+            rootLink.href = '#';
+            rootLink.dataset.path = '';
+            rootLink.innerHTML = '<i class="fas fa-home"></i> 根目录';
+            rootLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                navigateTo('');
+            });
+            breadcrumb.appendChild(rootLink);
+            if (!path) return;
+            const parts = path.split('/').filter(Boolean);
+            let accum = '';
+            parts.forEach((part, index) => {
+                const sep = document.createElement('span');
+                sep.className = 'sep';
+                sep.textContent = '/';
+                breadcrumb.appendChild(sep);
+                accum = accum ? `${accum}/${part}` : part;
+                if (index === parts.length - 1) {
+                    const cur = document.createElement('span');
+                    cur.className = 'current';
+                    cur.textContent = part;
+                    breadcrumb.appendChild(cur);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.dataset.path = accum;
+                    link.textContent = part;
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        navigateTo(accum);
+                    });
+                    breadcrumb.appendChild(link);
+                }
+            });
+        }
+
+        function navigateTo(path) {
+            pathInput.value = path;
+            saveSettings();
+            renderBreadcrumb(path);
+            refreshFileList();
+        }
+
+        // ===== 列表 =====
+        async function fetchFileList() {
+            const config = requireConfig();
+            if (!config) return [];
+            saveSettings();
+            const encodedPath = config.path ? encodePath(config.path) : '';
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodedPath}?ref=${config.branch}`;
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                if (!response.ok) {
+                    if (response.status === 404) { showToast('目录不存在或仓库为空', 'error'); return []; }
+                    const errData = await response.json();
+                    showToast(`API 错误: ${errData.message || response.statusText}`, 'error');
+                    return [];
+                }
+                const data = await response.json();
+                if (Array.isArray(data)) return data;
+                showToast('路径指向了一个文件，请修改为目录路径', 'error');
+                return [];
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+                return [];
+            }
+        }
+
+        function renderFileList(items) {
+            fileList.innerHTML = '';
+            if (!items || items.length === 0) {
+                fileList.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i><p>这个目录是空的，上传点东西吧</p></div>`;
+                return;
+            }
+
+            items.sort((a, b) => {
+                if (a.type === 'dir' && b.type !== 'dir') return -1;
+                if (a.type !== 'dir' && b.type === 'dir') return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            for (const item of items) {
+                if (item.name === '.gitkeep') continue;
+
+                const el = document.createElement('div');
+                el.className = 'file-item';
+                el.dataset.path = item.path;
+                const isDir = item.type === 'dir';
+                if (isDir) el.classList.add('folder');
+                const isEnc = !isDir && isEncName(item.name);
+                if (isEnc) el.classList.add('encrypted');
+
+                const icon = isDir ? 'fa-folder' : getFileIcon(item.name);
+                const size = (!isDir && item.size) ? formatSize(item.size) : '';
+                // 显示名：加密文件去掉 .enc，图标加锁
+                const displayName = isEnc ? encNameToOrig(item.name) : item.name;
+
+                if (isDir) {
+                    el.innerHTML = `
+                        <div class="file-info">
+                            <i class="fas ${icon}"></i>
+                            <span class="name">${escapeHtml(item.name)}</span>
+                            <span class="size"></span>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn-enter" title="进入"><i class="fas fa-folder-open"></i></button>
+                            <button class="btn-rename" title="重命名"><i class="fas fa-i-cursor"></i></button>
+                            <button class="btn-delete" title="删除文件夹"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    `;
+                    el.addEventListener('click', function(e) {
+                        if (e.target.closest('button')) return;
+                        navigateTo(item.path);
+                    });
+                    el.querySelector('.btn-enter').addEventListener('click', function(e) {
+                        e.stopPropagation(); navigateTo(item.path);
+                    });
+                    el.querySelector('.btn-rename').addEventListener('click', function(e) {
+                        e.stopPropagation(); promptRename(item.path, item.name, true);
+                    });
+                    el.querySelector('.btn-delete').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (confirm(`确定要删除文件夹 “${item.name}” 及其下所有文件吗？\n（用 Git Database API 单 commit 完成）`)) {
+                            deleteFolder(item.path);
+                        }
+                    });
+                } else {
+                    el.innerHTML = `
+                        <div class="file-info">
+                            <i class="fas ${icon}"></i>
+                            <span class="name">${escapeHtml(displayName)}</span>
+                            <span class="size">${size}</span>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn-download" title="${isEnc ? '解密下载' : '原始下载'}"><i class="fas fa-download"></i></button>
+                            <button class="btn-download-cdn" title="${isEnc ? '解密下载' : 'CDN加速下载'}"><i class="fas fa-rocket"></i></button>
+                            <button class="btn-download-gh" title="${isEnc ? '解密下载' : 'gh-proxy 代理下载'}"><i class="fas fa-bolt"></i></button>
+                            <button class="btn-rename" title="重命名"><i class="fas fa-i-cursor"></i></button>
+                            <button class="btn-delete" title="删除"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    `;
+                    el.querySelector('.btn-download').addEventListener('click', function(e) {
+                        e.stopPropagation(); handleDownload(item, 'raw');
+                    });
+                    el.querySelector('.btn-download-cdn').addEventListener('click', function(e) {
+                        e.stopPropagation(); handleDownload(item, 'cdn');
+                    });
+                    el.querySelector('.btn-download-gh').addEventListener('click', function(e) {
+                        e.stopPropagation(); handleDownload(item, 'gh');
+                    });
+                    el.querySelector('.btn-rename').addEventListener('click', function(e) {
+                        e.stopPropagation(); promptRename(item.path, item.name, false);
+                    });
+                    el.querySelector('.btn-delete').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (confirm(`确定要删除 “${item.path}” 吗？`)) {
+                            deleteFile(item.path, item.sha);
+                        }
+                    });
+                }
+                fileList.appendChild(el);
+            }
+        }
+
+        // ===== 下载：根据文件名后缀判断，0 网络检测 =====
+        async function handleDownload(item, type) {
+            const config = requireConfig();
+            if (!config) return;
+
+            if (isEncName(item.name)) {
+                const origName = encNameToOrig(item.name);
+                const password = await askPassword(origName);
+                if (!password) return;
+                showToast('正在拉取并解密...', 'info');
+                try {
+                    const buf = await fetchFullFileBytes(config, item.path);
+                    const decrypted = await decryptData(buf, password);
+                    downloadBlob(decrypted, origName);
+                    showToast(`✅ 已解密下载: ${origName}`, 'success');
+                } catch (e) {
+                    showToast(`解密失败：密码错误或文件损坏 (${e.message})`, 'error');
+                }
+                return;
+            }
+
+            // 非加密：走原方式
+            if (type === 'raw') {
+                if (item.download_url) window.open(item.download_url, '_blank');
+            } else if (type === 'cdn') {
+                window.open(`https://cdn.jsdmirror.com/gh/${config.owner}/${config.repo}@${config.branch}/${encodePath(item.path)}`, '_blank');
+            } else if (type === 'gh') {
+                const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${encodePath(item.path)}`;
+                window.open(`https://gh-proxy.com/${rawUrl}`, '_blank');
+            }
+        }
+
+        // ===== 重命名（单 commit，保留 .enc 后缀）=====
+        function promptRename(oldFullPath, oldName, isDir) {
+            const isEnc = !isDir && isEncName(oldName);
+            const dispName = isEnc ? encNameToOrig(oldName) : oldName;
+            let newName = prompt(
+                isDir ? `输入文件夹的新名字（原名：${oldName}）` : `输入文件的新名字（原名：${dispName}）`,
+                dispName
+            );
+            if (!newName || newName === dispName) return;
+            if (/[\\/]/.test(newName)) { showToast('名字不能包含 / 或 \\', 'error'); return; }
+            // 加密文件自动补 .enc
+            let finalName = newName;
+            if (isEnc && !finalName.endsWith('.enc')) finalName = finalName + '.enc';
+            if (finalName === oldName) return;
+            const parent = oldFullPath.substring(0, oldFullPath.length - oldName.length);
+            renameItem(oldFullPath, parent + finalName);
+        }
+
+        async function renameItem(oldPath, newPath) {
+            const config = requireConfig();
+            if (!config) return;
+            showToast('正在重命名（单 commit）...', 'info');
+            try {
+                const refRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/ref/heads/${config.branch}`,
+                    { headers: { 'Authorization': `token ${config.token}` } }
+                );
+                if (!refRes.ok) { showToast('获取 ref 失败', 'error'); return; }
+                const refData = await refRes.json();
+                const currentCommitSha = refData.object.sha;
+
+                const commitRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/commits/${currentCommitSha}`,
+                    { headers: { 'Authorization': `token ${config.token}` } }
+                );
+                const commitData = await commitRes.json();
+                const baseTreeSha = commitData.tree.sha;
+
+                const treeRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${baseTreeSha}?recursive=1`,
+                    { headers: { 'Authorization': `token ${config.token}` } }
+                );
+                const treeData = await treeRes.json();
+                if (treeData.truncated) { showToast('仓库太大，tree 被截断，无法安全重命名', 'error'); return; }
+
+                const newTree = [];
+                let matched = false;
+                for (const entry of treeData.tree) {
+                    if (entry.type !== 'blob') continue;
+                    let entryPath = entry.path;
+                    if (entryPath === oldPath) { entryPath = newPath; matched = true; }
+                    else if (entryPath.startsWith(oldPath + '/')) {
+                        entryPath = newPath + entryPath.substring(oldPath.length);
+                        matched = true;
+                    }
+                    newTree.push({ path: entryPath, mode: entry.mode, type: 'blob', sha: entry.sha });
+                }
+                if (!matched) { showToast('未找到要重命名的目标', 'error'); return; }
+
+                const createTreeRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees`,
+                    {
+                        method: 'POST',
+                        headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tree: newTree })
+                    }
+                );
+                if (!createTreeRes.ok) {
+                    const e = await createTreeRes.json();
+                    showToast(`创建 tree 失败: ${e.message}`, 'error'); return;
+                }
+                const newTreeData = await createTreeRes.json();
+
+                const createCommitRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/commits`,
+                    {
+                        method: 'POST',
+                        headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: `重命名 ${oldPath} → ${newPath}`,
+                            tree: newTreeData.sha,
+                            parents: [currentCommitSha]
+                        })
+                    }
+                );
+                if (!createCommitRes.ok) {
+                    const e = await createCommitRes.json();
+                    showToast(`创建 commit 失败: ${e.message}`, 'error'); return;
+                }
+                const newCommitData = await createCommitRes.json();
+
+                const updateRefRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/refs/heads/${config.branch}`,
+                    {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sha: newCommitData.sha })
+                    }
+                );
+                if (!updateRefRes.ok) {
+                    const e = await updateRefRes.json();
+                    showToast(`更新 ref 失败: ${e.message}`, 'error'); return;
+                }
+
+                showToast(`✅ 已重命名（1 个 commit）`, 'success');
+                refreshFileList();
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+            }
+        }
+
+        // ===== 删除文件夹（单 commit）=====
+        async function deleteFolder(folderPath) {
+            const config = requireConfig();
+            if (!config) return;
+            showToast('正在删除文件夹（单 commit）...', 'info');
+            try {
+                const refRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/ref/heads/${config.branch}`,
+                    { headers: { 'Authorization': `token ${config.token}` } }
+                );
+                const refData = await refRes.json();
+                const currentCommitSha = refData.object.sha;
+
+                const commitRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/commits/${currentCommitSha}`,
+                    { headers: { 'Authorization': `token ${config.token}` } }
+                );
+                const commitData = await commitRes.json();
+                const baseTreeSha = commitData.tree.sha;
+
+                const treeRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${baseTreeSha}?recursive=1`,
+                    { headers: { 'Authorization': `token ${config.token}` } }
+                );
+                const treeData = await treeRes.json();
+                if (treeData.truncated) { showToast('仓库太大，tree 被截断', 'error'); return; }
+
+                const newTree = [];
+                for (const entry of treeData.tree) {
+                    if (entry.type !== 'blob') continue;
+                    if (entry.path === folderPath || entry.path.startsWith(folderPath + '/')) continue;
+                    newTree.push({ path: entry.path, mode: entry.mode, type: 'blob', sha: entry.sha });
+                }
+
+                const createTreeRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/trees`,
+                    {
+                        method: 'POST',
+                        headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tree: newTree })
+                    }
+                );
+                if (!createTreeRes.ok) {
+                    const e = await createTreeRes.json();
+                    showToast(`创建 tree 失败: ${e.message}`, 'error'); return;
+                }
+                const newTreeData = await createTreeRes.json();
+
+                const createCommitRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/commits`,
+                    {
+                        method: 'POST',
+                        headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: `删除文件夹 ${folderPath}`,
+                            tree: newTreeData.sha,
+                            parents: [currentCommitSha]
+                        })
+                    }
+                );
+                if (!createCommitRes.ok) {
+                    const e = await createCommitRes.json();
+                    showToast(`创建 commit 失败: ${e.message}`, 'error'); return;
+                }
+                const newCommitData = await createCommitRes.json();
+
+                const updateRefRes = await fetch(
+                    `https://api.github.com/repos/${config.owner}/${config.repo}/git/refs/heads/${config.branch}`,
+                    {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sha: newCommitData.sha })
+                    }
+                );
+                if (!updateRefRes.ok) {
+                    const e = await updateRefRes.json();
+                    showToast(`更新 ref 失败: ${e.message}`, 'error'); return;
+                }
+
+                showToast(`✅ 已删除文件夹（1 个 commit）`, 'success');
+                refreshFileList();
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+            }
+        }
+
+        // ===== 新建文件夹 =====
+        async function createFolder() {
+            const config = requireConfig();
+            if (!config) return;
+            const folderName = prompt('输入文件夹名称（可包含 / 创建多级，如 docs/images）');
+            if (!folderName) return;
+            if (/[\\]/.test(folderName) || folderName.endsWith('/')) { showToast('名字不合法', 'error'); return; }
+            const currentPath = config.path;
+            const folderPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+            const placeholderPath = `${folderPath}/.gitkeep`;
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(placeholderPath)}`;
+            try {
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `新建文件夹 ${folderPath}`,
+                        content: '',
+                        branch: config.branch
+                    })
+                });
+                if (!res.ok) {
+                    const e = await res.json();
+                    showToast(`创建失败: ${e.message}`, 'error'); return;
+                }
+                showToast(`✅ 文件夹已创建（1 个 commit）`, 'success');
+                refreshFileList();
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+            }
+        }
+
+        // ===== 删除文件 =====
+        async function deleteFile(path, sha) {
+            const config = requireConfig();
+            if (!config) return;
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(path)}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `通过网页删除 ${path}`,
+                        sha: sha,
+                        branch: config.branch
+                    })
+                });
+                if (!response.ok) {
+                    const errData = await response.json();
+                    showToast(`删除失败: ${errData.message || response.statusText}`, 'error');
+                    return;
+                }
+                showToast(`✅ 已删除 “${path}”`, 'success');
+                refreshFileList();
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+            }
+        }
+
+        // ===== 上传（加密时文件名自动加 .enc）=====
+        async function uploadFile(file) {
+            const config = requireConfig();
+            if (!config) return;
+
+            let basePath = config.path ? config.path.replace(/^\/+|\/+$/g, '') : '';
+            let fileName = file.name;
+            const willEncrypt = encryptCheckbox.checked;
+            // 关键：加密时文件名加 .enc
+            if (willEncrypt) fileName = fileName + '.enc';
+            let fullPath = basePath ? `${basePath}/${fileName}` : fileName;
+
+            let payloadBase64;
+
+            if (willEncrypt) {
+                const password = encryptPassword.value;
+                if (!password || password.length < 6) { showToast('加密密码至少 6 位', 'error'); return; }
+                if (!crypto || !crypto.subtle) { showToast('当前环境不支持 Web Crypto（需 HTTPS）', 'error'); return; }
+                showToast('正在加密文件...', 'info');
+                try {
+                    const rawBuf = await file.arrayBuffer();
+                    const encBuf = await encryptData(rawBuf, password);
+                    payloadBase64 = arrayBufferToBase64(encBuf);
+                } catch (e) {
+                    showToast(`加密失败: ${e.message}`, 'error'); return;
+                }
+            } else {
+                payloadBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            let sha = null;
+            const checkUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(fullPath)}`;
+            try {
+                const checkRes = await fetch(checkUrl, { headers: { 'Authorization': `token ${config.token}` } });
+                if (checkRes.ok) {
+                    const data = await checkRes.json();
+                    sha = data.sha;
+                }
+            } catch (ignore) {}
+
+            const putUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(fullPath)}`;
+            const body = {
+                message: willEncrypt ? `通过网页加密上传 ${fileName}` : `通过网页上传 ${fileName}`,
+                content: payloadBase64,
+                branch: config.branch
+            };
+            if (sha) body.sha = sha;
+
+            try {
+                const response = await fetch(putUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (!response.ok) {
+                    const errData = await response.json();
+                    showToast(`上传失败: ${errData.message || response.statusText}`, 'error');
+                    return;
+                }
+                showToast(willEncrypt ? `✅ 已加密上传: ${fileName}` : `✅ 上传成功: ${fileName}`, 'success');
+                fileInput.value = '';
+                fileSelected.textContent = '';
+                refreshFileList();
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error');
+            }
+        }
+
+        // ===== 刷新 =====
+        async function refreshFileList() {
+            const config = requireConfig();
+            if (!config) return;
+            saveSettings();
+            renderBreadcrumb(config.path);
+            fileList.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-pulse"></i><p>加载中...</p></div>';
+            const items = await fetchFileList();
+            renderFileList(items);
+        }
+
+        // ===== 事件 =====
+        refreshBtn.addEventListener('click', refreshFileList);
+        newFolderBtn.addEventListener('click', createFolder);
+        encryptCheckbox.addEventListener('change', function() {
+            encryptPassword.style.display = this.checked ? 'block' : 'none';
+        });
+        uploadBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) { showToast('请先选择一个文件', 'error'); return; }
+            if (file.size > 1024 * 1024 * 1024) { showToast('文件大小超过 1024MB', 'error'); return; }
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 处理中...';
+            uploadFile(file).finally(() => {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 上传';
+            });
+        });
+        fileInput.addEventListener('change', function() {
+            fileSelected.textContent = this.files.length > 0 ? this.files[0].name : '';
+        });
+        [tokenInput, ownerInput, repoInput, branchInput, pathInput].forEach(input => {
+            input.addEventListener('change', saveSettings);
+            input.addEventListener('blur', saveSettings);
+        });
+        pathInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') navigateTo(this.value.trim());
+        });
+
+        // 初始化
+        loadSettings();
+        if (tokenInput.value && ownerInput.value && repoInput.value) {
+            renderBreadcrumb(pathInput.value.trim());
+            refreshFileList();
+        } else {
+            fileList.innerHTML = `<div class="empty"><i class="fas fa-cog"></i><p>请在上方填写 GitHub 配置，然后点击「刷新列表」</p></div>`;
+        }
+
+        window.refreshFileList = refreshFileList;
+    })();
+</script>
+
+</body>
+</html>
