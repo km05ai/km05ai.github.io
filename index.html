@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: #0d1117; color: #c9d1d9; padding: 20px; min-height: 100vh; display: flex; justify-content: center; }
+        .app { max-width: 1000px; width: 100%; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid #30363d; margin-bottom: 24px; }
+        .header h1 { font-size: 1.8rem; font-weight: 600; background: linear-gradient(135deg, #58a6ff, #f0883e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .right { display: flex; align-items: center; gap: 10px; }
+        .header .badge { background: #21262d; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: #8b949e; white-space: nowrap; }
+        .header .badge.on { color: #3fb950; }
+        .header .btn-lock { background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: .2s; }
+        .header .btn-lock:hover { color: #f85149; border-color: #f85149; }
+
+        .settings { background: #161b22; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #30363d; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+        .settings .field { display: flex; flex-direction: column; gap: 4px; }
+        .settings label { font-size: 0.75rem; font-weight: 500; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+        .settings input { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #c9d1d9; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+        .settings input:focus { border-color: #58a6ff; }
+        .settings .btn-refresh { background: #238636; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px; justify-content: center; }
+        .settings .btn-refresh:hover { background: #2ea043; }
+
+        .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .toolbar .breadcrumb { background: #161b22; padding: 8px 16px; border-radius: 8px; border: 1px solid #30363d; font-size: 0.9rem; color: #8b949e; flex: 1; min-width: 200px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .breadcrumb a { color: #58a6ff; text-decoration: none; padding: 2px 6px; border-radius: 4px; transition: background 0.15s; }
+        .breadcrumb a:hover { background: #21262d; }
+        .breadcrumb .sep { color: #484f58; }
+        .breadcrumb .current { color: #c9d1d9; font-weight: 500; padding: 2px 6px; }
+        .toolbar .upload-area { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .upload-area input[type="file"] { display: none; }
+        .upload-area .file-label { background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 8px 16px; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
+        .upload-area .file-label:hover { background: #30363d; }
+        .upload-area .btn-upload { background: #1f6feb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .upload-area .btn-upload:hover { background: #388bfd; }
+        .upload-area .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+        .upload-area .btn-new-folder { background: #8957e5; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; }
+        .upload-area .btn-new-folder:hover { background: #a371f7; }
+
+        .encrypt-panel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; }
+        .encrypt-panel label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.9rem; color: #c9d1d9; user-select: none; }
+        .encrypt-panel label input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: #8957e5; }
+        .encrypt-panel #encryptPassword { display: none; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px 12px; color: #c9d1d9; font-size: 0.9rem; outline: none; flex: 1; min-width: 180px; }
+        .encrypt-panel #encryptPassword:focus { border-color: #8957e5; }
+        .encrypt-hint { font-size: 0.75rem; color: #8b949e; }
+
+        .file-list { background: #161b22; border-radius: 12px; border: 1px solid #30363d; overflow: hidden; }
+        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #21262d; transition: background 0.15s; }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: #1c2128; }
+        .file-item.folder { cursor: pointer; }
+        .file-item.folder .file-info i { color: #d29922; }
+        .file-item.encrypted .file-info .name::after { content: " 🔒"; opacity: 0.8; }
+        .file-item.encrypted .file-info i { color: #8957e5; }
+        .file-info { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+        .file-info i { font-size: 1.4rem; color: #58a6ff; width: 28px; text-align: center; }
+        .file-info .name { font-weight: 500; word-break: break-all; }
+        .file-info .size { font-size: 0.8rem; color: #8b949e; margin-left: 10px; white-space: nowrap; }
+        .file-actions { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        .file-actions button { background: transparent; border: none; cursor: pointer; font-size: 1.05rem; padding: 6px 8px; border-radius: 6px; transition: background 0.2s, color 0.2s; }
+        .file-actions .btn-delete { color: #f85149; }
+        .file-actions .btn-delete:hover { background: #21262d; color: #ff7b72; }
+        .file-actions .btn-download { color: #58a6ff; }
+        .file-actions .btn-download:hover { background: #21262d; }
+        .file-actions .btn-download-cdn { color: #3fb950; }
+        .file-actions .btn-download-cdn:hover { background: #21262d; }
+        .file-actions .btn-download-gh { color: #d29922; }
+        .file-actions .btn-download-gh:hover { background: #21262d; }
+        .file-actions .btn-race { color: #39c5cf; }
+        .file-actions .btn-race:hover { background: #21262d; }
+        .file-actions .btn-rename { color: #a371f7; }
+        .file-actions .btn-rename:hover { background: #21262d; }
+        .file-actions .btn-enter { color: #d29922; }
+        .file-actions .btn-enter:hover { background: #21262d; }
+        .file-actions .btn-preview { color: #3fb950; }
+        .file-actions .btn-preview:hover { background: #21262d; }
+
+        .empty { padding: 60px 20px; text-align: center; color: #8b949e; }
+        .empty i { font-size: 3rem; margin-bottom: 12px; opacity: 0.3; }
+
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #21262d; border: 1px solid #30363d; padding: 12px 28px; border-radius: 10px; color: #c9d1d9; font-size: 0.95rem; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); display: none; z-index: 999; max-width: 90%; text-align: center; }
+        .toast.success { border-color: #238636; }
+        .toast.error { border-color: #f85149; }
+
+        .preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1500; padding: 20px; }
+        .preview-modal.show { display: flex; }
+        .preview-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+        .preview-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #30363d; gap: 12px; }
+        .preview-title { font-size: 0.95rem; color: #c9d1d9; word-break: break-all; font-weight: 500; flex: 1; min-width: 0; }
+        .btn-preview-close { background: #21262d; border: 1px solid #30363d; color: #8b949e; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: .2s; }
+        .btn-preview-close:hover { color: #f85149; border-color: #f85149; }
+        .preview-content { flex: 1; overflow: auto; padding: 20px; margin: 0; color: #c9d1d9; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; background: #0d1117; border-radius: 0 0 12px 12px; }
+
+        .pwd-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1600; }
+        .pwd-modal.show { display: flex; }
+        .pwd-modal .pwd-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; width: 90%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+        .pwd-modal h3 { font-size: 1.1rem; margin-bottom: 12px; color: #c9d1d9; display: flex; align-items: center; gap: 8px; }
+        .pwd-modal .pwd-filename { font-size: 0.85rem; color: #8b949e; margin-bottom: 16px; word-break: break-all; }
+        .pwd-modal input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; color: #c9d1d9; font-size: 0.95rem; outline: none; margin-bottom: 16px; }
+        .pwd-modal input:focus { border-color: #58a6ff; }
+        .pwd-modal .pwd-btns { display: flex; gap: 10px; justify-content: flex-end; }
+        .pwd-modal .pwd-btns button { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+        .pwd-modal .btn-cancel { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+        .pwd-modal .btn-confirm { background: #1f6feb; color: #fff; }
+        .pwd-modal .btn-confirm:hover { background: #388bfd; }
+
+        body.locked .app { filter: blur(10px); pointer-events: none; user-select: none; }
+        .lock-screen { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; background: radial-gradient(circle at 50% 30%, rgba(31,111,235,0.14), rgba(13,17,23,0.97)); backdrop-filter: blur(6px); }
+        body:not(.locked) .lock-screen { display: none; }
+        .lock-box { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 380px; box-shadow: 0 30px 80px rgba(0,0,0,0.75); text-align: center; }
+        .lock-box .lock-icon { font-size: 2.2rem; color: #58a6ff; margin-bottom: 14px; }
+        .lock-box h2 { font-size: 1.25rem; margin-bottom: 6px; color: #c9d1d9; }
+        .lock-box p { font-size: 0.85rem; color: #8b949e; margin-bottom: 20px; }
+        .lock-box input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 12px 14px; color: #c9d1d9; font-size: 1rem; outline: none; margin-bottom: 14px; text-align: center; letter-spacing: 2px; }
+        .lock-box input:focus { border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.15); }
+        .lock-box button { width: 100%; background: #1f6feb; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+        .lock-box button:hover { background: #388bfd; }
+        .lock-box button:disabled { opacity: .6; cursor: progress; }
+        .lock-msg { margin-top: 14px; font-size: .85rem; min-height: 1.2em; color: #f85149; }
+        .lock-msg.ok { color: #3fb950; }
+
+        @media (max-width: 600px) {
+            .settings { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .upload-area { justify-content: stretch; }
+            .file-item { flex-wrap: wrap; gap: 8px; }
+            .file-actions { margin-left: auto; }
+            .preview-box { max-height: 95vh; }
+            .preview-content { font-size: 0.8rem; padding: 14px; }
+        }
+    </style>
+</head>
+<body class="locked">
+
+<div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+        <div class="lock-icon"><i class="fas fa-shield-halved"></i></div>
+        <h2>访问验证</h2>
+        <p>请输入访问密码以解锁控制台</p>
+        <input type="password" id="loginPassword" placeholder="••••••" autocomplete="off" />
+        <button id="loginBtn"><i class="fas fa-unlock-alt"></i> 解锁</button>
+        <div class="lock-msg" id="lockMsg"></div>
+    </div>
+</div>
+
+<div class="app" id="app">
+    <div class="header">
+        <h1><i class="fas fa-cloud" style="margin-right: 10px;"></i>GitHub 网盘</h1>
+        <div class="right">
+            <span class="badge" id="authBadge"><i class="fas fa-lock"></i> 未解锁</span>
+            <button class="btn-lock" id="lockBtn"><i class="fas fa-power-off"></i> 锁定</button>
+        </div>
+    </div>
+
+    <div class="settings" id="settings">
+        <div class="field"><label><i class="fas fa-user"></i> Owner</label><input type="text" id="ownerInput" value="km05ai" /></div>
+        <div class="field"><label><i class="fas fa-repository"></i> Repo</label><input type="text" id="repoInput" value="km05ai.github.io" /></div>
+        <div class="field"><label><i class="fas fa-code-branch"></i> Branch</label><input type="text" id="branchInput" value="main" /></div>
+        <div class="field"><label><i class="fas fa-folder"></i> 目录路径</label><input type="text" id="pathInput" placeholder="留空表示根目录" value="" /></div>
+        <div class="field" style="grid-column: span 1; display: flex; align-items: end;"><button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> 刷新列表</button></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="breadcrumb" id="breadcrumb"><a href="#" data-path="">根目录</a></div>
+        <div class="upload-area">
+            <input type="file" id="fileInput" />
+            <label for="fileInput" class="file-label"><i class="fas fa-upload"></i> 选择文件</label>
+            <span id="fileSelected" style="font-size:0.85rem;color:#8b949e;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button class="btn-upload" id="uploadBtn"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+            <button class="btn-new-folder" id="newFolderBtn"><i class="fas fa-folder-plus"></i> 新建文件夹</button>
+        </div>
+    </div>
+
+    <div class="encrypt-panel">
+        <label><input type="checkbox" id="encryptCheckbox" /><i class="fas fa-lock" style="color:#8957e5;"></i> 加密上传（二次加密，存为 .enc.enc）</label>
+        <input type="password" id="encryptPassword" placeholder="输入二次加密密码（至少 6 位）" />
+        <span class="encrypt-hint">默认已用内置密钥加密一层</span>
+    </div>
+
+    <div class="file-list" id="fileList">
+        <div class="empty"><i class="fas fa-inbox"></i><p>暂无文件，点击「选择文件」上传吧</p></div>
+    </div>
+</div>
+
+<div class="pwd-modal" id="pwdModal">
+    <div class="pwd-box">
+        <h3><i class="fas fa-lock" style="color:#8957e5;"></i> 解密文件</h3>
+        <div class="pwd-filename" id="pwdFilename"></div>
+        <input type="password" id="pwdInput" placeholder="请输入解密密码" autocomplete="off" />
+        <div class="pwd-btns">
+            <button class="btn-cancel" id="pwdCancel">取消</button>
+            <button class="btn-confirm" id="pwdConfirm">解密并下载</button>
+        </div>
+    </div>
+</div>
+
+<div class="preview-modal" id="previewModal">
+    <div class="preview-box">
+        <div class="preview-header">
+            <span class="preview-title" id="previewTitle"></span>
+            <button class="btn-preview-close" id="previewClose"><i class="fas fa-times"></i></button>
+        </div>
+        <pre class="preview-content" id="previewContent"></pre>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    (function() {
+        // =====================================================================
+        //  ★★★ 密钥库 ★★★
+        // =====================================================================
+        const VAULT = {
+            iter: 1000000,
+            aad : 'gh-token-v1',
+            salt: 'WslqFjFkV4hS5XXspZjVTg==',
+            iv  : 'uhIBs2o1dLbcxqaZ',
+            data: 'SH4SjJ4uxmGgWH/h83hzyF3kCsoCUW2Pxnx1YpR2yoCZw4ymHNZIAUZm27/7q5deF6C4/ABGLf4rx4sdvn0y+LeqP39Bmgh9kNY3wWcfK4Fp3n5+7qQp/drppy/vjVeX2Qn/N+Nl1DcX+GvDKw=='
+        };
+
+        const BUILTIN_KEY = 'km05ai-builtin-key-v1';
+
+        // =====================================================================
+        //  ★★★ 国内加速源池（竞速用，加源只改这里）★★★
+        // =====================================================================
+        const SOURCES = {
+            raw:       (c, p) => `https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch}/${p}`,
+            jsdmirror: (c, p) => `https://cdn.jsdmirror.com/gh/${c.owner}/${c.repo}@${c.branch}/${p}`,
+            ghproxy:   (c, p) => `https://gh-proxy.com/https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch}/${p}`,
+            ghfast:    (c, p) => `https://ghfast.top/https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch}/${p}`,
+            ghpci:     (c, p) => `https://ghp.ci/https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch}/${p}`,
+            v6ghproxy: (c, p) => `https://v6.gh-proxy.org/https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch}/${p}`,
+            ghproxynet:(c, p) => `https://ghproxy.net/https://raw.githubusercontent.com/${c.owner}/${c.repo}/${c.branch}/${p}`,
+        };
+        // =====================================================================
+
+        // ===== DOM =====
+        const ownerInput  = document.getElementById('ownerInput');
+        const repoInput   = document.getElementById('repoInput');
+        const branchInput = document.getElementById('branchInput');
+        const pathInput   = document.getElementById('pathInput');
+        const refreshBtn  = document.getElementById('refreshBtn');
+        const fileInput   = document.getElementById('fileInput');
+        const uploadBtn   = document.getElementById('uploadBtn');
+        const newFolderBtn= document.getElementById('newFolderBtn');
+        const fileSelected= document.getElementById('fileSelected');
+        const fileList    = document.getElementById('fileList');
+        const breadcrumb  = document.getElementById('breadcrumb');
+        const toast       = document.getElementById('toast');
+        const encryptCheckbox = document.getElementById('encryptCheckbox');
+        const encryptPassword = document.getElementById('encryptPassword');
+        const pwdModal    = document.getElementById('pwdModal');
+        const pwdFilename = document.getElementById('pwdFilename');
+        const pwdInput    = document.getElementById('pwdInput');
+        const pwdCancel   = document.getElementById('pwdCancel');
+        const pwdConfirm  = document.getElementById('pwdConfirm');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginBtn    = document.getElementById('loginBtn');
+        const lockMsg     = document.getElementById('lockMsg');
+        const lockBtn     = document.getElementById('lockBtn');
+        const authBadge   = document.getElementById('authBadge');
+        const previewModal  = document.getElementById('previewModal');
+        const previewTitle  = document.getElementById('previewTitle');
+        const previewContent= document.getElementById('previewContent');
+        const previewClose  = document.getElementById('previewClose');
+
+        const state = { token: '', unlocked: false };
+
+        // ===== 工具 =====
+        function b64ToBytes(b64) {
+            const bin = atob(b64);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            return arr;
+        }
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'success') toast.classList.add('success');
+            if (type === 'error') toast.classList.add('error');
+            toast.style.display = 'block';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        function getFileIcon(filename) {
+            const name = encNameToOrig(filename);
+            const ext = name.split('.').pop().toLowerCase();
+            const map = {
+                'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image', 'svg': 'fa-file-image',
+                'mp4': 'fa-file-video', 'avi': 'fa-file-video', 'mov': 'fa-file-video',
+                'mp3': 'fa-file-audio', 'wav': 'fa-file-audio',
+                'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
+                'pdf': 'fa-file-pdf',
+                'doc': 'fa-file-word', 'docx': 'fa-file-word',
+                'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+                'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+                'txt': 'fa-file-alt', 'md': 'fa-file-alt',
+                'js': 'fa-file-code', 'html': 'fa-file-code', 'css': 'fa-file-code', 'json': 'fa-file-code',
+                'py': 'fa-file-code', 'java': 'fa-file-code', 'c': 'fa-file-code', 'cpp': 'fa-file-code',
+            };
+            return map[ext] || 'fa-file';
+        }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        function encodePath(path) {
+            return path.split('/').map(encodeURIComponent).join('/');
+        }
+        function isEncName(name) { return name.endsWith('.enc'); }
+        function encNameToOrig(name) {
+            if (name.endsWith('.enc.enc')) return name.slice(0, -8);
+            if (name.endsWith('.enc')) return name.slice(0, -4);
+            return name;
+        }
+
+        const TEXT_EXTS = ['txt','md','markdown','json','js','mjs','ts','tsx','jsx','css','scss','less','html','htm','xml','yaml','yml','csv','tsv','log','py','java','c','cpp','h','hpp','sh','bash','bat','cmd','ini','conf','toml','rs','go','rb','php','sql','vue','svg','gitignore','env','properties','gradle','kt','swift','dart','lua','r','pl'];
+        const PREVIEW_MAX_SIZE = 1024 * 1024;
+
+        function isTextFile(name) {
+            const orig = encNameToOrig(name);
+            const dotIdx = orig.lastIndexOf('.');
+            if (dotIdx === -1) return false;
+            return TEXT_EXTS.includes(orig.slice(dotIdx + 1).toLowerCase());
+        }
+
+        // ===== 解锁核心 =====
+        async function unlockWithPassword(pw) {
+            if (!window.crypto || !crypto.subtle) throw new Error('当前环境不支持 Web Crypto（需 HTTPS 访问）');
+            const enc = new TextEncoder();
+            const baseKey = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+            const key = await crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: b64ToBytes(VAULT.salt), iterations: VAULT.iter, hash: 'SHA-256' },
+                baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+            );
+            const plainBuf = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: b64ToBytes(VAULT.iv), tagLength: 128, additionalData: enc.encode(VAULT.aad) },
+                key, b64ToBytes(VAULT.data)
+            );
+            return new TextDecoder().decode(plainBuf);
+        }
+
+        async function doLogin() {
+            const pw = loginPassword.value;
+            if (!pw) { lockMsg.textContent = '请输入密码'; lockMsg.className = 'lock-msg'; return; }
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 校验中...';
+            lockMsg.textContent = ''; lockMsg.className = 'lock-msg';
+            try {
+                const token = await unlockWithPassword(pw);
+                if (!token || token.length < 10) throw new Error('解出的内容异常');
+                state.token = token.trim(); state.unlocked = true;
+                localStorage.setItem('gh_token', state.token);
+                document.body.classList.remove('locked');
+                authBadge.innerHTML = '<i class="fas fa-lock-open"></i> 已解锁'; authBadge.classList.add('on');
+                loginPassword.value = '';
+                refreshFileList();
+            } catch (e) {
+                lockMsg.textContent = '密码错误或密钥库配置有误'; lockMsg.className = 'lock-msg';
+                loginPassword.select();
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-unlock-alt"></i> 解锁';
+            }
+        }
+
+        function doLock() {
+            state.token = ''; state.unlocked = false;
+            localStorage.removeItem('gh_token');
+            document.body.classList.add('locked');
+            authBadge.innerHTML = '<i class="fas fa-lock"></i> 未解锁'; authBadge.classList.remove('on');
+            fileList.innerHTML = '<div class="empty"><i class="fas fa-lock"></i><p>已锁定，请重新输入密码</p></div>';
+            lockMsg.textContent = '';
+            setTimeout(() => loginPassword.focus(), 100);
+        }
+
+        // ===== 配置 =====
+        function loadSettings() {
+            ownerInput.value  = localStorage.getItem('github_owner')  || 'km05ai';
+            repoInput.value   = localStorage.getItem('github_repo')   || 'km05ai.github.io';
+            branchInput.value = localStorage.getItem('github_branch') || 'main';
+            pathInput.value   = localStorage.getItem('github_path')   || '';
+        }
+        function saveSettings() {
+            localStorage.setItem('github_owner', ownerInput.value);
+            localStorage.setItem('github_repo', repoInput.value);
+            localStorage.setItem('github_branch', branchInput.value);
+            localStorage.setItem('github_path', pathInput.value);
+        }
+        function getConfig() {
+            return { token: state.token, owner: ownerInput.value.trim(), repo: repoInput.value.trim(), branch: branchInput.value.trim() || 'main', path: pathInput.value.trim() };
+        }
+        function requireConfig() {
+            const c = getConfig();
+            if (!c.token) { showToast('请先解锁', 'error'); return null; }
+            if (!c.owner || !c.repo) { showToast('请先填写 Owner 和 Repo', 'error'); return null; }
+            return c;
+        }
+
+        // ===== 加密核心 =====
+        const PBKDF2_ITER = 10000, SALT_LEN = 8, IV_LEN = 8, TAG_BITS = 96;
+
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' },
+                baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+            );
+        }
+        async function encryptData(data, password) {
+            const salt = crypto.getRandomValues(new Uint8Array(SALT_LEN));
+            const iv = crypto.getRandomValues(new Uint8Array(IV_LEN));
+            const key = await deriveKey(password, salt);
+            const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, tagLength: TAG_BITS }, key, data);
+            const result = new Uint8Array(SALT_LEN + IV_LEN + ciphertext.byteLength);
+            result.set(salt, 0); result.set(iv, SALT_LEN); result.set(new Uint8Array(ciphertext), SALT_LEN + IV_LEN);
+            return result;
+        }
+        async function decryptData(buffer, password) {
+            const view = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+            const minLen = SALT_LEN + IV_LEN + TAG_BITS / 8;
+            if (view.length < minLen) throw new Error('文件太小，不是有效加密文件');
+            const salt = view.slice(0, SALT_LEN), iv = view.slice(SALT_LEN, SALT_LEN + IV_LEN), ciphertext = view.slice(SALT_LEN + IV_LEN);
+            const key = await deriveKey(password, salt);
+            const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv, tagLength: TAG_BITS }, key, ciphertext);
+            return new Uint8Array(plaintext);
+        }
+
+        // =====================================================================
+        //  ★★★ 按类型拉取字节（raw / cdn / gh 固定源；race 竞速）★★★
+        // =====================================================================
+        async function fetchByType(config, filePath, type) {
+            const p = encodePath(filePath);
+            if (type === 'raw') {
+                const res = await fetch(SOURCES.raw(config, p));
+                if (!res.ok) throw new Error(`raw 源 HTTP ${res.status}`);
+                return await res.arrayBuffer();
+            }
+            if (type === 'cdn') {
+                const res = await fetch(SOURCES.jsdmirror(config, p));
+                if (!res.ok) throw new Error(`jsdmirror 源 HTTP ${res.status}`);
+                return await res.arrayBuffer();
+            }
+            if (type === 'gh') {
+                const res = await fetch(SOURCES.ghproxy(config, p));
+                if (!res.ok) throw new Error(`gh-proxy 源 HTTP ${res.status}`);
+                return await res.arrayBuffer();
+            }
+            // race：所有源竞速
+            return await fetchFullFileBytes(config, filePath);
+        }
+
+        // 多源竞速（预览 / race 下载共用）
+        async function fetchFullFileBytes(config, filePath) {
+            const encodedPath = encodePath(filePath);
+            const urls = Object.values(SOURCES).map(fn => fn(config, encodedPath));
+
+            const controllers = urls.map(() => new AbortController());
+            const promises = urls.map((url, i) =>
+                fetch(url, { signal: controllers[i].signal }).then(async res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const buf = await res.arrayBuffer();
+                    controllers.forEach((c, j) => { if (j !== i) c.abort(); });
+                    return buf;
+                })
+            );
+
+            try {
+                return await Promise.any(promises);
+            } catch (e) {
+                const apiUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodedPath}?ref=${config.branch}`;
+                const res = await fetch(apiUrl, {
+                    headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!res.ok) throw new Error('所有源均不可用');
+                const data = await res.json();
+                if (!data.content) throw new Error('无法读取内容');
+                const bin = atob(data.content.replace(/\s/g, ''));
+                const arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                return arr.buffer;
+            }
+        }
+
+        function arrayBufferToBase64(buffer) {
+            const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+            const CH = 8192; let result = '';
+            for (let i = 0; i < bytes.length; i += CH) result += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+            return btoa(result);
+        }
+        function downloadBlob(bytes, filename) {
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
+
+        async function getDecryptedBytes(item) {
+            const config = requireConfig();
+            if (!config) return null;
+            const name = item.name;
+
+            if (name.endsWith('.enc.enc')) {
+                const password = await askPassword(name.slice(0, -8));
+                if (!password) return null;
+                const buf = await fetchFullFileBytes(config, item.path);
+                const layer1 = await decryptData(buf, password);
+                return await decryptData(layer1, BUILTIN_KEY);
+            }
+
+            if (name.endsWith('.enc')) {
+                const buf = await fetchFullFileBytes(config, item.path);
+                try {
+                    return await decryptData(buf, BUILTIN_KEY);
+                } catch (e) {
+                    const password = await askPassword(name.slice(0, -4));
+                    if (!password) return null;
+                    return await decryptData(buf, password);
+                }
+            }
+
+            return new Uint8Array(await fetchFullFileBytes(config, item.path));
+        }
+
+        // ===== 预览 =====
+        async function handlePreview(item) {
+            if (item.size && item.size > PREVIEW_MAX_SIZE) {
+                showToast('文件超过 1MB，请下载后查看', 'error'); return;
+            }
+            const origName = encNameToOrig(item.name);
+            previewTitle.textContent = origName;
+            previewContent.textContent = '加载中（多源竞速）...';
+            previewModal.classList.add('show');
+            try {
+                const bytes = await getDecryptedBytes(item);
+                if (!bytes) { previewModal.classList.remove('show'); return; }
+                const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+                previewTitle.textContent = `${origName} （${formatSize(bytes.length)}）`;
+                previewContent.textContent = text;
+            } catch (e) {
+                previewContent.textContent = `预览失败：${e.message}`;
+            }
+        }
+
+        function closePreview() {
+            previewModal.classList.remove('show');
+            previewContent.textContent = '';
+            previewTitle.textContent = '';
+        }
+
+        // ===== 密码弹窗 =====
+        function askPassword(filename) {
+            return new Promise((resolve) => {
+                pwdFilename.textContent = `文件：${filename}`;
+                pwdInput.value = '';
+                pwdModal.classList.add('show');
+                setTimeout(() => pwdInput.focus(), 100);
+                function onConfirm() { cleanup(); resolve(pwdInput.value || null); }
+                function onCancel() { cleanup(); resolve(null); }
+                function onKey(e) { if (e.key === 'Enter') onConfirm(); else if (e.key === 'Escape') onCancel(); }
+                function cleanup() {
+                    pwdModal.classList.remove('show');
+                    pwdConfirm.removeEventListener('click', onConfirm);
+                    pwdCancel.removeEventListener('click', onCancel);
+                    pwdInput.removeEventListener('keydown', onKey);
+                }
+                pwdConfirm.addEventListener('click', onConfirm);
+                pwdCancel.addEventListener('click', onCancel);
+                pwdInput.addEventListener('keydown', onKey);
+            });
+        }
+
+        // ===== 面包屑 =====
+        function renderBreadcrumb(path) {
+            breadcrumb.innerHTML = '';
+            const rootLink = document.createElement('a');
+            rootLink.href = '#'; rootLink.dataset.path = '';
+            rootLink.innerHTML = '<i class="fas fa-home"></i> 根目录';
+            rootLink.addEventListener('click', function(e) { e.preventDefault(); navigateTo(''); });
+            breadcrumb.appendChild(rootLink);
+            if (!path) return;
+            const parts = path.split('/').filter(Boolean);
+            let accum = '';
+            parts.forEach((part, index) => {
+                const sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '/';
+                breadcrumb.appendChild(sep);
+                accum = accum ? `${accum}/${part}` : part;
+                if (index === parts.length - 1) {
+                    const cur = document.createElement('span'); cur.className = 'current'; cur.textContent = part;
+                    breadcrumb.appendChild(cur);
+                } else {
+                    const link = document.createElement('a'); link.href = '#'; link.dataset.path = accum; link.textContent = part;
+                    link.addEventListener('click', function(e) { e.preventDefault(); navigateTo(accum); });
+                    breadcrumb.appendChild(link);
+                }
+            });
+        }
+        function navigateTo(path) {
+            pathInput.value = path; saveSettings(); renderBreadcrumb(path); refreshFileList();
+        }
+
+        // ===== 列表 =====
+        async function fetchFileList() {
+            const config = requireConfig();
+            if (!config) return [];
+            saveSettings();
+            const encodedPath = config.path ? encodePath(config.path) : '';
+            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodedPath}?ref=${config.branch}`;
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!response.ok) {
+                    if (response.status === 404) { showToast('目录不存在或仓库为空', 'error'); return []; }
+                    const errData = await response.json();
+                    showToast(`API 错误: ${errData.message || response.statusText}`, 'error'); return [];
+                }
+                const data = await response.json();
+                if (Array.isArray(data)) return data;
+                showToast('路径指向了一个文件，请修改为目录路径', 'error'); return [];
+            } catch (err) {
+                showToast(`网络错误: ${err.message}`, 'error'); return [];
+            }
+        }
+
+        function renderFileList(items) {
+            fileList.innerHTML = '';
+            if (!items || items.length === 0) {
+                fileList.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i><p>这个目录是空的，上传点东西吧</p></div>`;
+                return;
+            }
+            items.sort((a, b) => {
+                if (a.type === 'dir' && b.type !== 'dir') return -1;
+                if (a.type !== 'dir' && b.type === 'dir') return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            for (const item of items) {
+                if (item.name === '.gitkeep') continue;
+                const el = document.createElement('div');
+                el.className = 'file-item';
+                el.dataset.path = item.path;
+                const isDir = item.type === 'dir';
+                if (isDir) el.classList.add('folder');
+                const isEnc = !isDir && isEncName(item.name);
+                if (isEnc) el.classList.add('encrypted');
+
+                const isRootIndex = !isDir && item.path === 'index.html';
+                const isDouble = !isDir && item.name.endsWith('.enc.enc');
+                const canPreview = !isDir && isTextFile(item.name);
+
+                const icon = isDir ? 'fa-folder' : getFileIcon(item.name);
+                const size = (!isDir && item.size) ? formatSize(item.size) : '';
+                const displayName = isEnc ? encNameToOrig(item.name) : item.name;
+
+                if (isDir) {
+                    el.innerHTML = `
+                        <div class="file-info"><i class="fas ${icon}"></i><span class="name">${escapeHtml(item.name)}</span><span class="size"></span></div>
+                        <div class="file-actions">
+                            <button class="btn-enter" title="进入"><i class="fas fa-folder-open"></i></button>
+                            <button class="btn-rename" title="重命名"><i class="fas fa-i-cursor"></i></button>
+                            <button class="btn-delete" title="删除文件夹"><i class="fas fa-trash-alt"></i></button>
+                        </div>`;
+                    el.addEventListener('click', function(e) { if (e.target.closest('button')) return; navigateTo(item.path); });
+                    el.querySelector('.btn-enter').addEventListener('click', function(e) { e.stopPropagation(); navigateTo(item.path); });
+                    el.querySelector('.btn-rename').addEventListener('click', function(e) { e.stopPropagation(); promptRename(item.path, item.name, true); });
+                    el.querySelector('.btn-delete').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (confirm(`确定要删除文件夹 “${item.name}” 及其下所有文件吗？`)) deleteFolder(item.path);
+                    });
+                } else {
+                    const rawTitle = isDouble ? 'raw 源双层解密下载（需密码）' : isEnc ? 'raw 源解密下载' : '原始下载';
+                    const cdnTitle = isEnc ? 'jsdmirror 源解密下载' : 'jsdmirror 加速下载';
+                    const ghTitle  = isEnc ? 'gh-proxy 源解密下载' : 'gh-proxy 代理下载';
+                    const raceTitle= isEnc ? '所有源竞速解密下载' : '所有源竞速下载';
+                    el.innerHTML = `
+                        <div class="file-info">
+                            <i class="fas ${icon}"></i>
+                            <span class="name">${escapeHtml(displayName)}${isDouble ? ' 🔐' : ''}</span>
+                            <span class="size">${size}</span>
+                        </div>
+                        <div class="file-actions">
+                            ${canPreview ? '<button class="btn-preview" title="在线预览"><i class="fas fa-eye"></i></button>' : ''}
+                            <button class="btn-download" title="${rawTitle}"><i class="fas fa-download"></i></button>
+                            <button class="btn-download-cdn" title="${cdnTitle}"><i class="fas fa-rocket"></i></button>
+                            <button class="btn-download-gh" title="${ghTitle}"><i class="fas fa-bolt"></i></button>
+                            <button class="btn-race" title="${raceTitle}"><i class="fas fa-forward-fast"></i></button>
+                            ${isRootIndex ? '<button class="btn-rename" title="不可重命名" disabled style="opacity:.3;cursor:not-allowed;"><i class="fas fa-i-cursor"></i></button>' : '<button class="btn-rename" title="重命名"><i class="fas fa-i-cursor"></i></button>'}
+                            ${isRootIndex ? '<button class="btn-delete" title="不可删除" disabled style="opacity:.3;cursor:not-allowed;"><i class="fas fa-trash-alt"></i></button>' : '<button class="btn-delete" title="删除"><i class="fas fa-trash-alt"></i></button>'}
+                        </div>`;
+                    if (canPreview) el.querySelector('.btn-preview').addEventListener('click', function(e) { e.stopPropagation(); handlePreview(item); });
+                    el.querySelector('.btn-download').addEventListener('click', function(e) { e.stopPropagation(); handleDownload(item, 'raw'); });
+                    el.querySelector('.btn-download-cdn').addEventListener('click', function(e) { e.stopPropagation(); handleDownload(item, 'cdn'); });
+                    el.querySelector('.btn-download-gh').addEventListener('click', function(e) { e.stopPropagation(); handleDownload(item, 'gh'); });
+                    el.querySelector('.btn-race').addEventListener('click', function(e) { e.stopPropagation(); handleDownload(item, 'race'); });
+                    el.querySelector('.btn-rename').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (isRootIndex) { showToast('index.html 不可重命名', 'error'); return; }
+                        promptRename(item.path, item.name, false);
+                    });
+                    el.querySelector('.btn-delete').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (isRootIndex) { showToast('index.html 不可删除', 'error'); return; }
+                        if (confirm(`确定要删除 “${item.path}” 吗？`)) deleteFile(item.path, item.sha);
+                    });
+                }
+                fileList.appendChild(el);
+            }
+        }
+
+        // =====================================================================
+        //  ★★★ 统一下载入口：4 个按钮都走这里，加密文件按 type 拉取后解密 ★★★
+        // =====================================================================
+        async function handleDownload(item, type) {
+            const config = requireConfig();
+            if (!config) return;
+            const name = item.name;
+            const isDouble = name.endsWith('.enc.enc');
+            const isSingle = !isDouble && name.endsWith('.enc');
+
+            // ===== 加密文件：按 type 拉取密文 → 解密 → 下载 =====
+            if (isDouble || isSingle) {
+                const origName = isDouble ? name.slice(0, -8) : name.slice(0, -4);
+                let password = null;
+                if (isDouble) {
+                    password = await askPassword(origName);
+                    if (!password) return;
+                }
+                showToast('正在拉取并解密...', 'info');
+                try {
+                    const buf = await fetchByType(config, item.path, type);
+                    let data;
+                    if (isDouble) {
+                        const layer1 = await decryptData(buf, password);
+                        data = await decryptData(layer1, BUILTIN_KEY);
+                    } else {
+                        try {
+                            data = await decryptData(buf, BUILTIN_KEY);
+                        } catch (e) {
+                            // 兼容旧的单层用户密码加密
+                            password = await askPassword(origName);
+                            if (!password) return;
+                            data = await decryptData(buf, password);
+                        }
+                    }
+                    downloadBlob(data, origName);
+                    showToast(`✅ 已解密下载: ${origName}`, 'success');
+                } catch (e) {
+                    showToast(`解密失败: ${e.message}`, 'error');
+                }
+                return;
+            }
+
+            // ===== 非加密文件：4 个按钮各自独立 =====
+            if (type === 'raw') {
+                if (item.download_url) window.open(item.download_url, '_blank');
+            } else if (type === 'cdn') {
+                window.open(SOURCES.jsdmirror(config, encodePath(item.path)), '_blank');
+            } else if (type === 'gh') {
+                window.open(SOURCES.ghproxy(config, encodePath(item.path)), '_blank');
+            } else if (type === 'race') {
+                showToast('正在下载（所有源竞速）...', 'info');
+                try {
+                    const buf = await fetchFullFileBytes(config, item.path);
+                    downloadBlob(new Uint8Array(buf), name);
+                    showToast(`✅ 已下载: ${name}`, 'success');
+                } catch (e) {
+                    showToast(`竞速下载失败: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        // ===== 重命名 =====
+        function promptRename(oldFullPath, oldName, isDir) {
+            if (!isDir && oldFullPath === 'index.html') { showToast('index.html 不可重命名', 'error'); return; }
+            const isDouble = !isDir && oldName.endsWith('.enc.enc');
+            const isEnc = !isDir && isEncName(oldName);
+            const dispName = isEnc ? encNameToOrig(oldName) : oldName;
+            let newName = prompt(isDir ? `输入文件夹的新名字（原名：${oldName}）` : `输入文件的新名字（原名：${dispName}）`, dispName);
+            if (!newName || newName === dispName) return;
+            if (/[\\/]/.test(newName)) { showToast('名字不能包含 / 或 \\', 'error'); return; }
+            let finalName = newName;
+            if (isDouble) { if (!finalName.endsWith('.enc.enc')) { if (finalName.endsWith('.enc')) finalName = finalName.slice(0, -4); finalName += '.enc.enc'; } }
+            else if (isEnc) { if (!finalName.endsWith('.enc')) finalName += '.enc'; }
+            if (finalName === oldName) return;
+            const parent = oldFullPath.substring(0, oldFullPath.length - oldName.length);
+            renameItem(oldFullPath, parent + finalName);
+        }
+
+        async function renameItem(oldPath, newPath) {
+            const config = requireConfig(); if (!config) return;
+            showToast('正在重命名（单 commit）...', 'info');
+            try {
+                const refRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/ref/heads/${config.branch}`, { headers: { 'Authorization': `token ${config.token}` } });
+                if (!refRes.ok) { showToast('获取 ref 失败', 'error'); return; }
+                const currentCommitSha = (await refRes.json()).object.sha;
+                const commitData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/commits/${currentCommitSha}`, { headers: { 'Authorization': `token ${config.token}` } })).json();
+                const treeData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${commitData.tree.sha}?recursive=1`, { headers: { 'Authorization': `token ${config.token}` } })).json();
+                if (treeData.truncated) { showToast('仓库太大，tree 被截断', 'error'); return; }
+
+                const newTree = []; let matched = false;
+                for (const entry of treeData.tree) {
+                    if (entry.type !== 'blob') continue;
+                    let entryPath = entry.path;
+                    if (entryPath === oldPath) { entryPath = newPath; matched = true; }
+                    else if (entryPath.startsWith(oldPath + '/')) { entryPath = newPath + entryPath.substring(oldPath.length); matched = true; }
+                    newTree.push({ path: entryPath, mode: entry.mode, type: 'blob', sha: entry.sha });
+                }
+                if (!matched) { showToast('未找到要重命名的目标', 'error'); return; }
+
+                const newTreeData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/trees`, {
+                    method: 'POST', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tree: newTree })
+                })).json();
+
+                const newCommitData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/commits`, {
+                    method: 'POST', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `重命名 ${oldPath} → ${newPath}`, tree: newTreeData.sha, parents: [currentCommitSha] })
+                })).json();
+
+                const updateRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/refs/heads/${config.branch}`, {
+                    method: 'PATCH', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sha: newCommitData.sha })
+                });
+                if (!updateRes.ok) { showToast('更新 ref 失败', 'error'); return; }
+
+                showToast(`✅ 已重命名（1 个 commit）`, 'success'); refreshFileList();
+            } catch (err) { showToast(`网络错误: ${err.message}`, 'error'); }
+        }
+
+        // ===== 删除文件夹 =====
+        async function deleteFolder(folderPath) {
+            const config = requireConfig(); if (!config) return;
+            showToast('正在删除文件夹（单 commit）...', 'info');
+            try {
+                const refRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/ref/heads/${config.branch}`, { headers: { 'Authorization': `token ${config.token}` } });
+                const currentCommitSha = (await refRes.json()).object.sha;
+                const commitData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/commits/${currentCommitSha}`, { headers: { 'Authorization': `token ${config.token}` } })).json();
+                const treeData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/trees/${commitData.tree.sha}?recursive=1`, { headers: { 'Authorization': `token ${config.token}` } })).json();
+                if (treeData.truncated) { showToast('仓库太大，tree 被截断', 'error'); return; }
+
+                const newTree = [];
+                for (const entry of treeData.tree) {
+                    if (entry.type !== 'blob') continue;
+                    if (entry.path === folderPath || entry.path.startsWith(folderPath + '/')) continue;
+                    newTree.push({ path: entry.path, mode: entry.mode, type: 'blob', sha: entry.sha });
+                }
+
+                const newTreeData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/trees`, {
+                    method: 'POST', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tree: newTree })
+                })).json();
+
+                const newCommitData = await (await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/commits`, {
+                    method: 'POST', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `删除文件夹 ${folderPath}`, tree: newTreeData.sha, parents: [currentCommitSha] })
+                })).json();
+
+                await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/git/refs/heads/${config.branch}`, {
+                    method: 'PATCH', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sha: newCommitData.sha })
+                });
+
+                showToast(`✅ 已删除文件夹（1 个 commit）`, 'success'); refreshFileList();
+            } catch (err) { showToast(`网络错误: ${err.message}`, 'error'); }
+        }
+
+        // ===== 新建文件夹 =====
+        async function createFolder() {
+            const config = requireConfig(); if (!config) return;
+            const folderName = prompt('输入文件夹名称（可包含 / 创建多级）');
+            if (!folderName || /[\\]/.test(folderName) || folderName.endsWith('/')) { showToast('名字不合法', 'error'); return; }
+            const folderPath = config.path ? `${config.path}/${folderName}` : folderName;
+            try {
+                const res = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(folderPath + '/.gitkeep')}`, {
+                    method: 'PUT', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `新建文件夹 ${folderPath}`, content: '', branch: config.branch })
+                });
+                if (!res.ok) { showToast(`创建失败: ${(await res.json()).message}`, 'error'); return; }
+                showToast(`✅ 文件夹已创建`, 'success'); refreshFileList();
+            } catch (err) { showToast(`网络错误: ${err.message}`, 'error'); }
+        }
+
+        // ===== 删除文件 =====
+        async function deleteFile(path, sha) {
+            const config = requireConfig(); if (!config) return;
+            try {
+                const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(path)}`, {
+                    method: 'DELETE', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `删除 ${path}`, sha, branch: config.branch })
+                });
+                if (!response.ok) { showToast(`删除失败: ${(await response.json()).message}`, 'error'); return; }
+                showToast(`✅ 已删除`, 'success'); refreshFileList();
+            } catch (err) { showToast(`网络错误: ${err.message}`, 'error'); }
+        }
+
+        // ===== 上传 =====
+        async function uploadFile(file) {
+            const config = requireConfig(); if (!config) return;
+            if (file.name.endsWith('.enc')) { showToast('文件名不能以 .enc 结尾', 'error'); return; }
+            const willEncrypt = encryptCheckbox.checked;
+            if (willEncrypt) { const p = encryptPassword.value; if (!p || p.length < 6) { showToast('密码至少 6 位', 'error'); return; } }
+            if (!crypto || !crypto.subtle) { showToast('当前环境不支持 Web Crypto', 'error'); return; }
+
+            let fileName = willEncrypt ? `${file.name}.enc.enc` : `${file.name}.enc`;
+            let fullPath = config.path ? `${config.path.replace(/^\/+|\/+$/g, '')}/${fileName}` : fileName;
+            if (fullPath === 'index.html') { showToast('不能覆盖根目录 index.html', 'error'); return; }
+
+            let payloadBase64;
+            try {
+                let data = new Uint8Array(await file.arrayBuffer());
+                showToast(willEncrypt ? '双层加密中...' : '加密中...', 'info');
+                data = await encryptData(data, BUILTIN_KEY);
+                if (willEncrypt) data = await encryptData(data, encryptPassword.value);
+                payloadBase64 = arrayBufferToBase64(data);
+            } catch (e) { showToast(`加密失败: ${e.message}`, 'error'); return; }
+
+            let sha = null;
+            try {
+                const r = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(fullPath)}`, { headers: { 'Authorization': `token ${config.token}` } });
+                if (r.ok) sha = (await r.json()).sha;
+            } catch (ignore) {}
+
+            const body = { message: `上传 ${fileName}`, content: payloadBase64, branch: config.branch };
+            if (sha) body.sha = sha;
+            try {
+                const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${encodePath(fullPath)}`, {
+                    method: 'PUT', headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!response.ok) { showToast(`上传失败: ${(await response.json()).message}`, 'error'); return; }
+                showToast(willEncrypt ? `✅ 双层加密上传` : `✅ 加密上传`, 'success');
+                fileInput.value = ''; fileSelected.textContent = ''; refreshFileList();
+            } catch (err) { showToast(`网络错误: ${err.message}`, 'error'); }
+        }
+
+        // ===== 刷新 =====
+        async function refreshFileList() {
+            const config = requireConfig(); if (!config) return;
+            saveSettings(); renderBreadcrumb(config.path);
+            fileList.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-pulse"></i><p>加载中...</p></div>';
+            renderFileList(await fetchFileList());
+        }
+
+        // ===== 事件 =====
+        loginBtn.addEventListener('click', doLogin);
+        loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+        lockBtn.addEventListener('click', doLock);
+        refreshBtn.addEventListener('click', refreshFileList);
+        newFolderBtn.addEventListener('click', createFolder);
+        encryptCheckbox.addEventListener('change', function() { encryptPassword.style.display = this.checked ? 'block' : 'none'; });
+        uploadBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) { showToast('请先选择文件', 'error'); return; }
+            if (file.size > 1024 * 1024 * 1024) { showToast('超过 1024MB', 'error'); return; }
+            uploadBtn.disabled = true; uploadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 处理中...';
+            uploadFile(file).finally(() => { uploadBtn.disabled = false; uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 上传'; });
+        });
+        fileInput.addEventListener('change', function() { fileSelected.textContent = this.files.length ? this.files[0].name : ''; });
+        [ownerInput, repoInput, branchInput, pathInput].forEach(input => { input.addEventListener('change', saveSettings); input.addEventListener('blur', saveSettings); });
+        pathInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigateTo(pathInput.value.trim()); });
+
+        previewClose.addEventListener('click', closePreview);
+        previewModal.addEventListener('click', e => { if (e.target === previewModal) closePreview(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && previewModal.classList.contains('show')) closePreview(); });
+
+        // ===== 初始化 =====
+        loadSettings();
+        renderBreadcrumb(pathInput.value.trim());
+        const savedToken = localStorage.getItem('gh_token');
+        if (savedToken) {
+            state.token = savedToken; state.unlocked = true;
+            document.body.classList.remove('locked');
+            authBadge.innerHTML = '<i class="fas fa-lock-open"></i> 已解锁'; authBadge.classList.add('on');
+            refreshFileList();
+        } else {
+            fileList.innerHTML = '<div class="empty"><i class="fas fa-lock"></i><p>请先输入密码解锁</p></div>';
+            setTimeout(() => loginPassword.focus(), 200);
+        }
+    })();
+</script>
+
+</body>
+</html>
